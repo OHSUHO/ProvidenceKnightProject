@@ -75,6 +75,7 @@ namespace ProvidenceKnight.Data
             Check(db.stages, "stages");
             Check(db.decks, "decks");
             Check(db.rewardPools, "rewardPools");
+            Check(db.equipment, "equipment");
         }
 
         static void CheckAsset(GameDataAsset asset, List<DataIssue> issues)
@@ -106,6 +107,11 @@ namespace ProvidenceKnight.Data
                 case DeckData deck:
                     if (deck.cards.Count == 0) issues.Add(new DataIssue(deck, "카드가 없음"));
                     CheckCardList(deck, deck.cards, issues);
+                    break;
+
+                case EquipmentData equip:
+                    if (string.IsNullOrWhiteSpace(equip.displayName)) issues.Add(new DataIssue(equip, "이름이 비어 있음"));
+                    if (equip.stats.IsZero) issues.Add(new DataIssue(equip, "스탯 보너스가 없음"));
                     break;
 
                 case RewardPoolData pool:

@@ -16,11 +16,12 @@ namespace ProvidenceKnight.Data
         public List<StageData> stages = new();
         public List<DeckData> decks = new();
         public List<RewardPoolData> rewardPools = new();
+        public List<EquipmentData> equipment = new();
 
         Dictionary<string, GameDataAsset> _byId;
 
         public IEnumerable<GameDataAsset> All =>
-            cards.Cast<GameDataAsset>().Concat(units).Concat(stages).Concat(decks).Concat(rewardPools).Where(a => a != null);
+            cards.Cast<GameDataAsset>().Concat(units).Concat(stages).Concat(decks).Concat(rewardPools).Concat(equipment).Where(a => a != null);
 
         public T Get<T>(string id) where T : GameDataAsset => TryGet<T>(id, out var asset) ? asset : null;
 

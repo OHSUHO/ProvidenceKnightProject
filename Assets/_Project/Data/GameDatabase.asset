@@ -40,3 +40,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 534d3d0ca1a210440929d538bdb1efa6, type: 2}
   rewardPools:
   - {fileID: 11400000, guid: 0295925d4edeae4488e77200a795107f, type: 2}
+  equipment:
+  - {fileID: 11400000, guid: 2b2d5091c0dd2d744b3e3c1b7b6d7840, type: 2}
+  - {fileID: 11400000, guid: 07f8b8b031ef71c46be7863dda020903, type: 2}
+  - {fileID: 11400000, guid: a398b0eef1ac5704c839a48bfc354847, type: 2}

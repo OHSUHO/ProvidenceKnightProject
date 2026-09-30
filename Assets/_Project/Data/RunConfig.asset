@@ -15,8 +15,6 @@ MonoBehaviour:
   player: {fileID: 11400000, guid: 929ee40c51ed07844bc098dd16c81287, type: 2}
   stages:
   - {fileID: 11400000, guid: ff4de4456aa2441488c5e4d6c747c84b, type: 2}
-  - {fileID: 11400000, guid: ba57bd9e7267fd348b888c37cd0d77b5, type: 2}
-  - {fileID: 11400000, guid: dedbcd37a72701b49879f7c55d3b9aa3, type: 2}
   startingDeck: {fileID: 11400000, guid: 534d3d0ca1a210440929d538bdb1efa6, type: 2}
   rewardPool: {fileID: 11400000, guid: 0295925d4edeae4488e77200a795107f, type: 2}
   handSize: 5

@@ -65,6 +65,7 @@ namespace ProvidenceKnight.View
 
         void StartCurrentStage()
         {
+            Run.Bonus = ProfileSession.Current.Stats;   // 착용 장비 스탯을 이 전투에 적용
             Debug.Log($"[RunController] 스테이지 {Run.StageIndex + 1}/{Run.Stages.Count} 시작 (덱 {Run.Deck.Count}장, 최대에너지 {Run.MaxEnergy}, 체력 {(Run.PlayerHp?.ToString() ?? "풀피")})");
             battle.BeginBattle(Run);
         }
@@ -72,6 +73,7 @@ namespace ProvidenceKnight.View
         void OnBattleFinished(bool playerWon)
         {
             Run.CaptureResult(battle.State);
+            if (playerWon) ProfileRewards.Grant(ProfileSession.Current, ProfileRewards.ForStage(Run.CurrentStage));
 
             if (ExplorationReturn.Active)
             {

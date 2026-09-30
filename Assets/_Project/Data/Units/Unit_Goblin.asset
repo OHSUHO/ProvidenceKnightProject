@@ -22,6 +22,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c1fcf3658948b8f46a02094c41992a91, type: 2}
   actionPriority: 0
   turnStartEffects: []
+  rewardExp: 12
+  rewardGold: 8
   viewPrefab: {fileID: 0}
   sprite: {fileID: 0}
   color: {r: 1, g: 0.45, b: 0.4, a: 1}
