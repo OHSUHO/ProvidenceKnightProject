@@ -68,7 +68,7 @@ namespace ProvidenceKnight.Battle
         /// </summary>
         public BattleState CloneForSimulation()
         {
-            var grid = new GridMap(Grid.Width, Grid.Height) { MoveDirections = Grid.MoveDirections };
+            var grid = new GridMap(Grid.Width, Grid.Height);
             foreach (var p in Grid.AllPositions())
                 if (Grid.IsBlocked(p)) grid.SetBlocked(p, true);
 

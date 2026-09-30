@@ -12,17 +12,8 @@ namespace ProvidenceKnight.Battle
             Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left
         };
 
-        public static readonly Vector2Int[] Directions8 =
-        {
-            Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left,
-            new(1, 1), new(1, -1), new(-1, -1), new(-1, 1)
-        };
-
         public int Width { get; }
         public int Height { get; }
-
-        /// <summary>이동 방향 세트. 대각선 이동을 켜려면 Directions8 로 교체.</summary>
-        public Vector2Int[] MoveDirections { get; set; } = Directions4;
 
         readonly bool[] _blocked;
         readonly Unit[] _occupants;
@@ -96,7 +87,7 @@ namespace ProvidenceKnight.Battle
         }
 
         /// <summary>
-        /// GetReachable 과 같지만 BFS 발견 순서(걸음 수 → MoveDirections 순서)를 그대로 유지한다.
+        /// GetReachable 과 같지만 BFS 발견 순서(걸음 수 → Directions4 순서)를 그대로 유지한다.
         /// 적 AI 의 동점 처리가 이 순서를 따르므로 결과가 항상 결정적이다.
         /// </summary>
         public List<(Vector2Int cell, int steps)> GetReachableOrdered(Vector2Int origin, int maxSteps)
@@ -112,7 +103,7 @@ namespace ProvidenceKnight.Battle
                 int d = dist[cur];
                 if (d >= maxSteps) continue;
 
-                foreach (var dir in MoveDirections)
+                foreach (var dir in Directions4)
                 {
                     var next = cur + dir;
                     if (dist.ContainsKey(next) || !IsWalkable(next)) continue;
@@ -137,7 +128,7 @@ namespace ProvidenceKnight.Battle
             while (queue.Count > 0)
             {
                 var cur = queue.Dequeue();
-                foreach (var dir in MoveDirections)
+                foreach (var dir in Directions4)
                 {
                     var next = cur + dir;
                     if (dist.ContainsKey(next) || IsBlocked(next)) continue;
@@ -169,7 +160,7 @@ namespace ProvidenceKnight.Battle
                     return path;
                 }
 
-                foreach (var dir in MoveDirections)
+                foreach (var dir in Directions4)
                 {
                     var next = cur + dir;
                     if (visited.Contains(next) || !IsWalkable(next)) continue;

@@ -32,7 +32,7 @@ namespace ProvidenceKnight.Battle
             var prev = unit.Position;
             foreach (var cell in path)
             {
-                bool adjacent = grid.MoveDirections.Contains(cell - prev);
+                bool adjacent = GridMap.Directions4.Contains(cell - prev);
                 if (!adjacent || !grid.IsWalkable(cell)) return false;
                 prev = cell;
             }
