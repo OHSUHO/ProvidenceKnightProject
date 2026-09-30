@@ -56,7 +56,16 @@ namespace ProvidenceKnight.View
         [SerializeField] int negateBadgeSortingOrder = 17;
         [SerializeField] Color negateColor = new(1f, 0.85f, 0.35f);
 
+        [Header("상태이상 (텍스트 줄은 코드로 만든다 — 유닛 칸 아래쪽)")]
+        [SerializeField] Vector3 statusBadgeOffset = new(0f, -0.5f, 0f);
+        [SerializeField] float statusBadgeFontSize = 1f;
+        [SerializeField] int statusBadgeSortingOrder = 17;
+        [SerializeField] Vector3 statusPopupOffset = new(0f, 0.45f, 0f);
+
         public Unit Unit { get; private set; }
+
+        TextMeshPro _statusBadge;
+        readonly StatusState[] _statuses = new StatusState[StatusRules.All.Length];   // 이벤트 시점 값 (연출이 늦어도 화면이 정확하도록)
 
         TextMeshPro _negateBadge;
         BoardView _board;
@@ -75,6 +84,8 @@ namespace ProvidenceKnight.View
             hpBar.SetInstant(unit.Hp, unit.MaxHp);
             blockBadge.Set(unit.Block);
             SetNegateBadge(unit.Negate);
+            foreach (var type in StatusRules.All) _statuses[(int)type] = unit.GetStatus(type);
+            RefreshStatusBadge();
             intentBadge.Hide();
         }
 
@@ -110,6 +121,9 @@ namespace ProvidenceKnight.View
             {
                 case IntentType.Wait:
                     intentBadge.Show("대기", waitColor, action.Order);
+                    break;
+                case IntentType.Stunned:
+                    intentBadge.Show("기절", waitColor, action.Order);
                     break;
                 case IntentType.Move:
                     intentBadge.Show($"{action.Card.cardName} {action.Steps}", moveColor, action.Order);
@@ -202,6 +216,59 @@ namespace ProvidenceKnight.View
             Popup(blockPopupOffset, delta > 0 ? "무효화" : "막음!", negateColor);
             if (_negateBadge == null) return null;
             return NewSequence().Join(_negateBadge.transform.DOPunchScale(Vector3.one * 0.4f, 0.25f, 6));
+        }
+
+        /// <summary>상태이상 변화 (StatusChanged). 새로 걸렸으면 이름 팝업, 틱·만료는 조용히 줄만 갱신.</summary>
+        public Tween StatusChanged(StatusType type, int amount, int turns, bool applied)
+        {
+            _statuses[(int)type] = new StatusState(amount, turns);
+            RefreshStatusBadge();
+            if (!applied) return null;
+            Popup(statusPopupOffset, StatusRules.Name(type), StatusColor(type));
+            return _statusBadge == null ? null : NewSequence().Join(_statusBadge.transform.DOPunchScale(Vector3.one * 0.3f, 0.25f, 6));
+        }
+
+        static Color StatusColor(StatusType type) => type switch
+        {
+            StatusType.Bleed => new Color(0.85f, 0.2f, 0.25f),
+            StatusType.Burn => new Color(1f, 0.6f, 0.2f),
+            StatusType.Poison => new Color(0.55f, 0.85f, 0.3f),
+            StatusType.Stun => new Color(1f, 0.92f, 0.35f),
+            StatusType.Freeze => new Color(0.55f, 0.9f, 1f),
+            StatusType.Darkness => new Color(0.7f, 0.5f, 0.95f),
+            _ => Color.white
+        };
+
+        void RefreshStatusBadge()
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var type in StatusRules.All)
+            {
+                var s = _statuses[(int)type];
+                if (!StatusRules.IsActive(type, s)) continue;
+                var c = StatusColor(type);
+                if (sb.Length > 0) sb.Append(' ');
+                // 이름 + 강도(피해형) / 남은 턴 (독은 강도만)
+                var value = StatusRules.IsDamageOverTime(type) ? s.Amount : s.Turns;
+                sb.Append($"<color=#{ColorUtility.ToHtmlStringRGB(c)}>{StatusRules.Name(type)}{value}</color>");
+            }
+
+            if (_statusBadge == null)
+            {
+                if (sb.Length == 0) return;
+                var go = new GameObject("StatusBadge");
+                go.transform.SetParent(transform, false);
+                go.transform.localPosition = statusBadgeOffset;
+                _statusBadge = go.AddComponent<TextMeshPro>();
+                _statusBadge.font = initial.font;
+                _statusBadge.fontSize = statusBadgeFontSize;
+                _statusBadge.alignment = TextAlignmentOptions.Center;
+                _statusBadge.enableWordWrapping = false;
+                _statusBadge.sortingOrder = statusBadgeSortingOrder;
+                _statusBadge.rectTransform.sizeDelta = new Vector2(1.6f, 0.4f);
+            }
+            _statusBadge.gameObject.SetActive(sb.Length > 0);
+            _statusBadge.text = sb.ToString();
         }
 
         void SetNegateBadge(int negate)

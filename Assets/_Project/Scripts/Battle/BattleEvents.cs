@@ -18,6 +18,8 @@ namespace ProvidenceKnight.Battle
     public sealed record UnitDamaged(Unit Unit, int HpLoss, int BlockLoss, int Hp, int Block) : BattleEvent;
     public sealed record BlockChanged(Unit Unit, int Delta, int Block) : BattleEvent;            // 획득(+) 또는 턴 시작 초기화(-)
     public sealed record NegateChanged(Unit Unit, int Delta, int Negate) : BattleEvent;          // 획득(+) 또는 공격을 막아 소모(-)
+    /// <summary>상태이상 변화. Amount/Turns 는 변화 직후 값 (둘 다 비활성이면 사라진 것). Applied = 새로 걸림(true) / 틱·만료(false).</summary>
+    public sealed record StatusChanged(Unit Unit, StatusType Status, int Amount, int Turns, bool Applied) : BattleEvent;
     public sealed record UnitDied(Unit Unit) : BattleEvent;
     public sealed record CardPlayed(CardData Card, Vector2Int Target) : BattleEvent;
     public sealed record ResourcesChanged : BattleEvent;                                         // 에너지 / 손패 / 턴

@@ -9,6 +9,7 @@ namespace ProvidenceKnight.Battle.AI
     public enum IntentType
     {
         Wait,    // 쓸 수 있는 카드가 없음
+        Stunned, // 기절해서 이번 턴 행동 불가
         Move,    // 이동 카드 (대상에게 가까워지려고)
         Attack   // 공격 카드
     }
@@ -48,6 +49,9 @@ namespace ProvidenceKnight.Battle.AI
 
         public static EnemyAction Wait(Unit actor, int order) =>
             new(actor.Id, order, IntentType.Wait, actor.Position, null, actor.Position, null, null, 0);
+
+        public static EnemyAction Stunned(Unit actor, int order) =>
+            new(actor.Id, order, IntentType.Stunned, actor.Position, null, actor.Position, null, null, 0);
 
         public static EnemyAction Move(Unit actor, int order, CardData card, Vector2Int destination, IReadOnlyList<Vector2Int> path) =>
             new(actor.Id, order, IntentType.Move, actor.Position, card, destination, path, null, 0);

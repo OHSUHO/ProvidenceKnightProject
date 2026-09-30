@@ -93,8 +93,8 @@ namespace ProvidenceKnight.Data
                     CheckCardList(unit, unit.cards, issues);
                     if (unit.turnStartEffects != null)
                     {
-                        if (unit.turnStartEffects.Any(e => e == null)) issues.Add(new DataIssue(unit, "비어 있는 턴 시작 효과 칸이 있음"));
-                        if (unit.turnStartEffects.Any(e => e != null && e.Kind != Battle.Effects.EffectKind.Other))
+                        if (unit.turnStartEffects.Any(e => e?.effect == null)) issues.Add(new DataIssue(unit, "비어 있는 턴 시작 효과 칸이 있음"));
+                        if (unit.turnStartEffects.Any(e => e?.effect != null && e.effect.Kind != Battle.Effects.EffectKind.Other))
                             issues.Add(new DataIssue(unit, "턴 시작 효과에는 공격·이동 효과를 쓸 수 없음 (대상 칸이 없음)"));
                     }
                     break;

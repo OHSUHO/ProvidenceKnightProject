@@ -19,6 +19,9 @@ namespace ProvidenceKnight.Battle.AI
             var actions = new List<EnemyAction>();
             int order = 1;
 
+            // 실제 적 턴처럼 상태이상 피해가 먼저 들어간다 (이 피해로 쓰러지는 몬스터는 계획에서 빠진다)
+            BattleRules.RunEnemyTurnStart(sim);
+
             foreach (var enemy in sim.EnemiesInActionOrder.ToList())
             {
                 if (sim.IsBattleOver) break;
@@ -42,8 +45,9 @@ namespace ProvidenceKnight.Battle.AI
         public static EnemyAction ChooseAction(GridMap grid, Unit enemy, Unit target, int order = 1)
         {
             if (target == null || target.IsDead) return EnemyAction.Wait(enemy, order);
+            if (enemy.Has(StatusType.Stun)) return EnemyAction.Stunned(enemy, order);
 
-            var cards = enemy.Data.cards.Where(c => c != null).ToList();
+            var cards = UsableCards(enemy).ToList();
 
             CardData bestAttack = null;
             foreach (var card in cards.Where(c => c.Has(EffectKind.Attack)))
@@ -76,6 +80,10 @@ namespace ProvidenceKnight.Battle.AI
         }
 
 
+        /// <summary>상태이상(기절·빙결·암흑)에 막히지 않은, 지금 쓸 수 있는 카드.</summary>
+        static IEnumerable<CardData> UsableCards(Unit enemy) =>
+            enemy.Data.cards.Where(c => c != null && StatusRules.CanUse(enemy, c));
+
         /// <summary>
         /// 위험 지역을 "이 몬스터 차례가 됐을 때의 격자" 기준으로 계산한다.
         /// 현재 계획에서 앞선 몬스터들의 행동을 복사본에 먼저 적용하므로, 계획된 도착 칸·공격 칸이 항상 이 범위 안에 들어간다.
@@ -99,7 +107,7 @@ namespace ProvidenceKnight.Battle.AI
         {
             var moveCells = new List<Vector2Int>();
             var attackCells = new HashSet<Vector2Int>();
-            foreach (var card in enemy.Data.cards.Where(c => c != null))
+            foreach (var card in UsableCards(enemy))
             {
                 if (card.Has(EffectKind.Attack))
                 {
@@ -121,17 +129,23 @@ namespace ProvidenceKnight.Battle.AI
     {
         public static void Apply(BattleState state, EnemyAction action)
         {
-            if (state.IsBattleOver || action.Card == null) return;
+            if (state.IsBattleOver) return;
 
             var unit = state.GetUnit(action.ActorId);
             if (unit == null || unit.IsDead) return;
 
-            var ctx = new EffectContext(state, unit, action.Target, action.Card);
-            foreach (var effect in action.Card.effects)
+            if (action.Card != null)
             {
-                if (state.IsBattleOver) break;
-                effect?.Resolve(ctx);
+                var ctx = new EffectContext(state, unit, action.Target, action.Card);
+                foreach (var effect in action.Card.effects)
+                {
+                    if (state.IsBattleOver) break;
+                    effect?.Resolve(ctx);
+                }
             }
+
+            // 행동이 끝나면 (기절해서 쉬었더라도) 자기 턴 하나가 지난 것 → 제어 상태이상 지속 턴 감소
+            if (!state.IsBattleOver) BattleRules.EndOfTurn(state, unit);
         }
     }
 }

@@ -90,6 +90,9 @@ namespace ProvidenceKnight.View
                 case NegateChanged n:
                     Enqueue(ViewOf(n.Unit), v => v.NegateChanged(n.Delta, n.Negate));
                     break;
+                case StatusChanged st:
+                    Enqueue(ViewOf(st.Unit), v => v.StatusChanged(st.Status, st.Amount, st.Turns, st.Applied));
+                    break;
                 case UnitDied x:
                     if (_views.Remove(x.Unit, out var dead)) Enqueue(dead, v => v.Die());
                     break;
