@@ -2,7 +2,10 @@
     "name": "ProvidenceKnight.Editor",
     "rootNamespace": "ProvidenceKnight.EditorTools",
     "references": [
-        "ProvidenceKnight"
+        "ProvidenceKnight",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [
         "Editor"
