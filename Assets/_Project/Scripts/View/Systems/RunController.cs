@@ -35,6 +35,8 @@ namespace ProvidenceKnight.View
 
             int seed = System.Environment.TickCount;
             Run = RunState.FromConfig(config, seed);
+            if (ExplorationReturn.Active && ExplorationReturn.Stage != null)
+                Run = new RunState(new List<StageData> { ExplorationReturn.Stage }, config.player, config.startingDeck.cards, config.handSize, config.startingEnergy, seed);
 #if UNITY_EDITOR
             if (TakeTestStage() is { } testStage)
             {
@@ -71,6 +73,12 @@ namespace ProvidenceKnight.View
         {
             Run.CaptureResult(battle.State);
 
+            if (ExplorationReturn.Active)
+            {
+                FinishExplorationBattle(playerWon);
+                return;
+            }
+
             if (!playerWon)
             {
                 Debug.Log("[RunController] 런 종료: 패배");
@@ -91,6 +99,31 @@ namespace ProvidenceKnight.View
             }
 
             ShowReward(options);
+        }
+
+        /// <summary>탐험 씬에서 들어온 전투: 이기면 보상 카드를 고른 뒤, 지면 안내 후, 암전과 함께 탐험 씬으로 돌아간다.</summary>
+        void FinishExplorationBattle(bool playerWon)
+        {
+            if (!playerWon)
+            {
+                rewardScreen.ShowEndOfRun(cleared: false, onAcknowledge: () => ReturnToExploration(false));
+                return;
+            }
+
+            var options = RewardPicker.Pick(config.rewardPool != null ? config.rewardPool.cards : null, config.rewardChoices,
+                new System.Random(Run.StageSeed(RunState.RewardSalt)));
+            if (options.Count == 0) { ReturnToExploration(true); return; }
+            rewardScreen.Show(options, chosen =>
+            {
+                if (chosen != null) Debug.Log($"[RunController] 보상으로 '{chosen.cardName}' 획득 (탐험 복귀 시 런 상태는 이어지지 않음)");
+                ReturnToExploration(true);
+            });
+        }
+
+        static void ReturnToExploration(bool playerWon)
+        {
+            var scene = ExplorationReturn.Finish(playerWon);
+            BattleTransition.Play(scene);
         }
 
         void ShowReward(List<CardData> options)
