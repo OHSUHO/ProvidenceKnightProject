@@ -89,7 +89,7 @@ RunEnemyTurn(state):
 | 공격 칸 | 항상 | 공격받을 칸을 빨간색으로 칠함. 플레이어 칸에는 **받을 피해 합계** 표시: `피해 12 (방어 5) → HP 30→23` |
 | 위험 지역 | 적에 마우스를 올렸을 때 | 그 적의 이동 가능 범위(파랑) + 공격만 닿는 칸(분홍) + 스탯 툴팁(`이동 3 · 근접 · 공격 7`). **그 적의 차례가 됐을 때의 격자 기준**(앞선 적들의 계획을 먼저 적용)이라 계획된 도착·공격 칸이 항상 범위 안에 있음. 다른 적의 경로·잔상은 흐리게 |
 | 전체 위험 지역 | 토글 키(Alt) / 버튼 | 모든 적의 공격 가능 칸 합집합 |
-| 행동 미리보기 *(P3에서 구현 → 플레이 테스트로 유지 여부 결정)* | 카드를 고르고 대상 칸에 마우스를 올렸을 때 | "이 칸으로 이동하면 적 계획이 이렇게 바뀐다"를 미리 표시. 계획은 `state.Clone()`으로 계산하는 순수 함수라 비용이 적음 |
+| 행동 미리보기 *(P3 구현 완료 → 플레이 테스트로 유지 여부 결정, `P` 키로 켜고 끔)* | 카드를 고르고 대상 칸에 마우스를 올렸을 때 | "이 칸에 쓰면 적 계획이 이렇게 바뀐다"를 미리 표시 (플레이어가 옮겨 갈 칸에 잔상, 쓰러질 적은 "처치"). `BattleController.PreviewCard`가 복사본에서 실제 사용과 같은 `ApplyCard`를 거쳐 계산 |
 
 ---
 
@@ -164,35 +164,41 @@ record BattleEnded(bool PlayerWon);
 
 ### 3.2 Battle.unity 하이어라키
 
+P3에서 실제로 만든 구성 (루트는 씬 최상위):
+
 ```
-Battle                         (BattleBootstrap: RunConfig/GameDatabase 참조, 조립만 담당)
-├─ Main Camera                 (CameraFramer: HUD의 BoardArea 사각형 안에 보드를 맞춤)
-├─ Board                       (BoardView: 좌표 변환, 타일 생성. [에디터] "스테이지 미리보기" 버튼)
-│  ├─ Tiles                    ← Tile.prefab 인스턴스
-│  ├─ Overlays                 (HighlightLayer, IntentOverlayView: 경로·공격칸·피해 예고)
-│  └─ Units                    ← Unit.prefab 인스턴스
-├─ Systems
-│  ├─ EventPlayer              (BattleEventPlayer)
-│  └─ Input                    (BoardPointer: 포인터→칸 / PlayerTurnInput: Idle·CardSelected·Busy 상태머신)
-├─ HUD Canvas
-│  ├─ BoardArea                (빈 RectTransform — 필드가 들어갈 화면 영역. 여기를 옮기면 카메라가 따라옴)
-│  ├─ TopBar                   (TurnInfoView, ToastView)
-│  ├─ BottomPanel              (EnergyView, HandView ← Card.prefab ×5, DeckPreviewView, EndTurnButton)
-│  ├─ UnitTooltip
-│  └─ ResultBanner
-├─ Reward Canvas               (RewardScreen, 기본 비활성)
-└─ EventSystem
+Main Camera                    (CameraFramer: HUD의 BoardArea 사각형 안에 보드를 맞춤, 에디터에서도 동작)
+Battle                         (BattleBootstrap: 조립 / RunController: 스테이지·보상 흐름. P4에서 RunConfig로 설정 이동)
+Board                          (BoardView: 좌표 변환, Tile·Unit 프리팹 생성. [인스펙터] "스테이지 미리보기" 버튼)
+├─ Tiles                       ← Tile.prefab 인스턴스 (런타임 생성)
+├─ Overlays                    (HighlightLayer: 카드 대상·위험 지역·호버)
+│  ├─ Hover
+│  └─ Plan                     (IntentOverlayView: 공격 칸·경로·잔상·공격 화살표, 프리팹 풀)
+├─ Units                       ← Unit_Player / Unit_Enemy 인스턴스
+└─ Effects                     (FloatingTextPool)
+Systems
+├─ EventPlayer                 (BattleEventPlayer: 이벤트 → 연출 큐)
+├─ PlanPresenter               (EnemyPlanPresenter: 오버레이 + 의도 말풍선 + 피해 예고 + 행동 미리보기)
+└─ Input                       (BoardPointer: 포인터→칸 / PlayerTurnInput: Idle·CardSelected·Busy)
+HUD Canvas                     (BattleHud)
+├─ BoardArea                   (빈 RectTransform — 필드가 들어갈 화면 영역. 여기를 옮기면 카메라가 따라옴)
+├─ TopBar                      (TurnInfo, Toast)
+├─ BottomPanel                 (CanvasGroup: Energy, Hand ← Card.prefab ×5, DeckPreview, EndTurnButton)
+├─ UnitTooltip
+└─ ResultBanner
+Reward Canvas                  (RewardScreen, Panel 기본 비활성)
+EventSystem                    (InputSystemUIInputModule)
 ```
 
 ### 3.3 프리팹
 
 | 프리팹 | 구성 | 스크립트 |
 |---|---|---|
-| `Tile` | SpriteRenderer(바닥) + 하이라이트 자식 | `TileView` |
-| `Unit` (+ Player/Enemy Variant) | Body(SpriteRenderer), HpBar, BlockBadge, IntentBadge(Enemy만) 자식을 **미리 배치** | `UnitView`, `HpBarView`, `BlockBadgeView`, `IntentBadgeView` |
-| `Card` | 배경·테두리·코스트·이름·설명·아트 | `CardView` |
-| `FloatingText` | TMP 월드 텍스트 | `FloatingText` (풀링) |
-| `PathMarker` / `AttackMarker` | 경로 점·화살표, 공격 칸 | `IntentOverlayView`가 풀링 |
+| `Tile` | Floor + Threat(공격 예정 빨강) + Highlight 자식 | `TileView` (바닥 체크무늬·장애물 색) |
+| `Unit` → `Unit_Player` / `Unit_Enemy` Variant | Body, Initial(아트 없을 때 글자), HpBar, BlockBadge, IntentBadge 자식을 **미리 배치**. IntentBadge는 적 = 의도, 플레이어 = 받을 피해 예고 (한 줄, 자기 칸 안에 들어가게) | `UnitView`, `HpBarView`, `BlockBadgeView`, `IntentBadgeView` |
+| `Card` | 테두리·배경·코스트·이름·설명 (TMP UGUI) | `CardView` — 손패·보상 화면 공용 |
+| `FloatingText` | TMP 월드 텍스트 | `FloatingText` + `FloatingTextPool` |
+| `PlanSegment` / `PlanArrowHead` / `PlanGhost` | 경로·공격 화살표 선분, 화살촉, 도착 칸 잔상(몸체·글자·테두리·순서 배지) | `IntentOverlayView`가 풀링, `PlanGhostView` |
 
 - `UnitData.viewPrefab`(선택)으로 몬스터별 전용 프리팹을 지정할 수 있다. 비어 있으면 기본 Variant에 `sprite`/`color`만 적용한다.
 - 모든 연출 값(이동 속도, 런지 거리, 흔들림 세기, 색)은 스크립트 상수에서 **인스펙터 필드**로 옮긴다.
@@ -201,13 +207,13 @@ Battle                         (BattleBootstrap: RunConfig/GameDatabase 참조, 
 
 | v0 | v1 |
 |---|---|
-| `BattleRunner` | `BattleBootstrap`(조립) + `PlayerTurnInput`(카드→칸 선택) + `CameraFramer` + `BattleEventPlayer` |
+| `BattleRunner` | `BattleBootstrap`(조립) + `PlayerTurnInput`(카드→칸 선택) + `EnemyPlanPresenter`(계획 표시) + `CameraFramer` + `BattleEventPlayer` |
 | `GridView` | `BoardView` + `TileView` + `HighlightLayer` + `IntentOverlayView` |
 | `UnitView`(361줄, 코드 생성) | `Unit` 프리팹 + 작은 컴포넌트 4개 |
-| `HudView` + `CardView` + `UI` 헬퍼 | 씬 Canvas + `HandView`/`CardView`/`EnergyView`/`DeckPreviewView`/`TurnInfoView`/`ToastView`/`ResultBannerView` |
+| `HudView` + `CardView` + `UI` 헬퍼 | 씬 Canvas + `BattleHud` + `HandView`/`CardView`/`EnergyView`/`DeckPreviewView`/`TurnInfoView`/`ToastView`/`UnitTooltipView`/`ResultBannerView` |
 | `RewardView` | `RewardScreen` (씬에 배치, `Card` 프리팹 재사용) |
-| `RunRunner` | `RunController` (설정은 `RunConfig` SO로 이동) |
-| `TweenClock`(P1에서 삭제 → `AnimationQueue`), `SpriteFactory` | `BattleEventPlayer.IsPlaying`, 실제 스프라이트·TMP 폰트 에셋으로 대체 |
+| `RunRunner` | `RunController` (P3는 이름만 변경, 설정은 P4에서 `RunConfig` SO로 이동) |
+| `TweenClock`(P1에서 삭제 → `AnimationQueue`), `SpriteFactory` | `BattleEventPlayer`(인스턴스 큐, `IsPlaying`), `Art/Sprites/{Square,Triangle,Circle}.png`, TMP 폰트 에셋 |
 
 ---
 
@@ -276,7 +282,7 @@ Battle                         (BattleBootstrap: RunConfig/GameDatabase 참조, 
 |---|---|---|
 | **P1 규칙** | `EnemyPlanner`(순차 시뮬레이션) + `EnemyTurnPlan` + 경로 거리 + 계획 그대로 실행 + 행동 순서(우선순위). `TargetPattern`을 적 공격에 적용. 임시로 기존 `GridView`에 경로·공격 칸·순서 번호·위험 지역(적 호버) 표시 | §5 불변식 테스트 통과. 표시된 공격이 막혀서 불발되는 일이 없음 |
 | **P2 로직 분리** ✅ | `BattleState`/`BattleController` 분리, 이벤트 스트림, `CardEffect` 다형성 + 카드 에셋 마이그레이션, `BattleRules` | 기존 테스트 이전 완료. `BattleState`에 효과 `switch` 없음 |
-| **P3 씬/프리팹** | §3 하이어라키와 프리팹, TMP 폰트, `BattleEventPlayer`, `PlayerTurnInput`, `CameraFramer`, 위험 지역·툴팁·피해 예고 UI | 씬 뷰에서 HUD와 필드 레이아웃을 직접 편집 가능. `TweenClock`·`SpriteFactory`·`HudView` 삭제 |
+| **P3 씬/프리팹** ✅ | §3 하이어라키와 프리팹, TMP 폰트, `BattleEventPlayer`, `PlayerTurnInput`, `CameraFramer`, 위험 지역·툴팁·피해 예고 UI | 씬 뷰에서 HUD와 필드 레이아웃을 직접 편집 가능. `TweenClock`·`SpriteFactory`·`HudView` 삭제 |
 | **P4 데이터** | `GameDataAsset` id, `GameDatabase`, `RunConfig`, 스테이지 그리드 페인팅 인스펙터, 데이터 검증 메뉴·테스트, (세이브 구조) | 새 스테이지를 인스펙터에서 칠해서 만들고 바로 플레이 가능 |
 
 > P1을 먼저 하는 이유: 규칙이 확정되어야 P2의 이벤트 모양(`EnemyPlanChanged`, `UnitAttacked(Cells)`)과 P3의 표시 요소가 정해진다.
@@ -303,3 +309,16 @@ Battle                         (BattleBootstrap: RunConfig/GameDatabase 참조, 
 - **규칙 변화**: 플레이어 턴이 아니면 카드를 쓸 수 없음(`"플레이어 턴이 아님"`). 카드 피해도 적 공격과 같이 **적대 유닛에게만** 적용(`BattleRules.AttackCell`)
 - **테스트**: 98개 → 103개 전부 통과 (콤보 카드 효과 순서, 설명 자동 생성, 턴 상태머신, 플레이어 턴 외 카드 사용 금지, RewardPicker 추가). Play 모드에서 실제 카드 사용·4턴 진행 후 화면 HP와 로직 HP 일치 확인
 - 작업 전 백업: 세션 scratchpad `backup_pre_p2/` (프로젝트가 git 저장소가 아님)
+
+### P3 완료 (2026-09-30)
+
+- **씬**: `Battle.unity`를 §3.2 하이어라키로 다시 구성. HUD(Canvas)·필드 레이아웃을 씬에서 직접 편집한다. `HUD Canvas/BoardArea`를 옮기거나 크기를 바꾸면 `CameraFramer`가 에디터에서도 카메라를 맞춘다. `Board` 인스펙터의 **스테이지 미리보기**로 `previewStage`의 타일·유닛을 깔아 볼 수 있음 (DontSave, Play 진입 시 자동 삭제)
+- **프리팹**(`_Project/Prefabs`): Board/{Tile, PlanSegment, PlanArrowHead, PlanGhost}, Units/{Unit, Unit_Player, Unit_Enemy, FloatingText}, UI/Card. 연출 값(이동 속도, 런지, 흔들림, 색, 두께, 알파)은 모두 인스펙터 필드. `UnitData.viewPrefab` 추가
+- **스크립트**(`View/Board`, `View/Units`, `View/Hud`, `View/Systems`, `Input`): 삭제 — `BattleRunner`, `GridView`, `PlanOverlay`, `UnitView`(v0), `HudView`(+`CardView`, `UI`), `RewardView`, `RunRunner`, `FloatingText`(v0), `AnimationQueue`, `SpriteFactory`, `BattleInputController`
+- **연출 큐**: 정적 `AnimationQueue` → 씬 컴포넌트 `BattleEventPlayer`. 각 단계는 Tween을 돌려주고 `OnKill`로 다음 단계로 넘어가므로, 연출 도중 유닛이 파괴돼도 큐가 멈추지 않는다 (`Abort` 불필요). `playbackSpeed` 필드로 연출 속도 조절
+- **텍스트**: 전부 TextMeshPro. `_Project/Fonts/Warhaven-{Regular,Bold} SDF`(Dynamic, 2048 멀티 아틀라스), TMP 기본 폰트로 지정, `→ ▲ ▼`는 LiberationSans 폴백. `①` 같은 원문자는 두 폰트 모두 없어서 순서 번호는 **원 배지 + 숫자**로 표시. 원본 TTF는 `Resources`에서 `_Project/Fonts`로 이동
+  - Dynamic 폰트 에셋은 플레이할 때마다 아틀라스가 채워져 수 MB가 되므로, `Editor/DynamicFontSaveCleaner`가 저장 직전에 비운다 (저장소에는 항상 빈 ~6KB 상태)
+- **행동 미리보기**(§1.5): `BattleController.PreviewCard(hand, cell)` → `CardPreview(State, Plan)`. 실제 사용과 같은 `ApplyCard`를 복사본에 적용하므로 미리보기 = 사용 후 계획 (테스트 `ActionPreviewTests`: 모든 대상 칸·시드에서 일치, 실제 상태·이벤트 불변, 처치 시 그 적 행동 제거). 표시: 적 경로·잔상·말풍선이 바뀐 계획으로, 플레이어가 옮겨 갈 칸에 플레이어 잔상, 쓰러질 적은 "처치". `P` 키로 켜고 끔 (`PlayerTurnInput.actionPreview`)
+- **그 밖의 표시**: `Alt`를 누르고 있으면 전체 위험 지역(모든 적의 공격 가능 칸 합집합). 유닛 툴팁(오른쪽 위)은 플레이어도 표시 — 적 턴에 받을 피해 내역. 의도·피해 예고 말풍선은 **한 줄**로 줄여 자기 칸 안에 들어가게 함 (위아래로 붙은 유닛끼리 말풍선이 HP 바를 가리던 문제)
+- **확인**: 테스트 103개 → 115개 전부 통과. Play 모드에서 카드 사용·행동 미리보기·3턴 진행(화면 위치와 로직 위치 일치)·승리 → 보상 선택 → 2스테이지(9x6) 시작과 카메라 재배치까지 확인
+- **남은 것**: 카드 UI 호버로 `Self` 카드(방어 등) 미리보기, 유닛 이름이 영문 데이터(`Knight`, `Slime`) → P4 데이터 정리 때 한글화, 실제 창 포커스 상태에서의 연출 템포 확인

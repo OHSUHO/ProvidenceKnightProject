@@ -141,21 +141,54 @@ namespace ProvidenceKnight.Battle
             if (!CanSelectCard(handIndex, out reason)) return false;
             if (!GetValidTargets(handIndex).Contains(target)) { reason = "사용할 수 없는 칸"; return false; }
 
-            var card = State.Cards.Hand[handIndex];
-            State.Energy -= card.cost;
-            State.Cards.Cycle(handIndex, card.exhaust);
-            State.Emit(new CardPlayed(card, target));
+            ApplyCard(State, handIndex, target);
+            if (!State.IsBattleOver) RefreshEnemyPlan();
+            return true;
+        }
 
-            var ctx = new EffectContext(State, State.Player, target, card);
+        /// <summary>
+        /// 행동 미리보기: 이 카드를 이 칸에 쓰면 적 계획이 어떻게 바뀌는지. 복사본에서 실제와 같은 ApplyCard 를 거치므로
+        /// 결과가 사용 후 표시될 계획과 같다. 사용할 수 없으면 null.
+        /// </summary>
+        public CardPreview PreviewCard(int handIndex, Vector2Int target)
+        {
+            if (!CanSelectCard(handIndex, out _) || !GetValidTargets(handIndex).Contains(target)) return null;
+
+            var sim = State.CloneForSimulation();
+            ApplyCard(sim, handIndex, target);
+            var plan = sim.IsBattleOver ? EnemyTurnPlan.Empty : EnemyPlanner.Plan(sim);
+            return new CardPreview(sim, plan);
+        }
+
+        /// <summary>에너지 지불 → 카드 순환 → 효과 순서대로 적용. 실제 사용과 미리보기가 공유한다.</summary>
+        static void ApplyCard(BattleState state, int handIndex, Vector2Int target)
+        {
+            var card = state.Cards.Hand[handIndex];
+            state.Energy -= card.cost;
+            state.Cards.Cycle(handIndex, card.exhaust);
+            state.Emit(new CardPlayed(card, target));
+
+            var ctx = new EffectContext(state, state.Player, target, card);
             foreach (var effect in card.effects)
             {
-                if (State.IsBattleOver) break;
+                if (state.IsBattleOver) break;
                 effect?.Resolve(ctx);
             }
 
-            State.Emit(new ResourcesChanged());
-            if (!State.IsBattleOver) RefreshEnemyPlan();
-            return true;
+            state.Emit(new ResourcesChanged());
+        }
+    }
+
+    /// <summary>카드 사용 미리보기 결과. State 는 카드를 쓴 뒤의 복사본(적 턴 전), Plan 은 그 상태의 적 계획.</summary>
+    public sealed class CardPreview
+    {
+        public BattleState State { get; }
+        public EnemyTurnPlan Plan { get; }
+
+        public CardPreview(BattleState state, EnemyTurnPlan plan)
+        {
+            State = state;
+            Plan = plan;
         }
     }
 }

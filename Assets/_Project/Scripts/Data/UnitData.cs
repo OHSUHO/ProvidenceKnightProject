@@ -28,8 +28,10 @@ namespace ProvidenceKnight.Data
 
         public TargetPattern AttackPattern => new(attackShape, attackRange, requiresEnemy: true);
 
-        [Header("View (프로토타입용)")]
-        public Sprite sprite;               // 비어 있으면 색 네모로 표시
+        [Header("View")]
+        [Tooltip("이 유닛 전용 프리팹 (UnitView 필요). 비어 있으면 BoardView 의 팀별 기본 프리팹에 sprite/color 만 적용")]
+        public GameObject viewPrefab;
+        public Sprite sprite;               // 비어 있으면 색 네모 + 이름 첫 글자로 표시
         public Color color = Color.white;
     }
 }
