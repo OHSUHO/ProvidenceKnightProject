@@ -11,10 +11,14 @@ namespace ProvidenceKnight.Run
     public class RunState
     {
         public IReadOnlyList<StageData> Stages { get; }
+        public UnitData Player { get; }
         public int StageIndex { get; private set; }
         public List<CardData> Deck { get; }
         public int HandSize { get; }
         public int MaxEnergy { get; private set; }
+
+        /// <summary>런 난수 시드. 스테이지마다 여기서 파생한 시드를 쓰므로, 시드와 스테이지 번호만 저장하면 같은 결과가 재현된다.</summary>
+        public int Seed { get; }
 
         /// <summary>다음 전투를 시작할 플레이어 체력. null 이면 풀피 (첫 스테이지).</summary>
         public int? PlayerHp { get; private set; }
@@ -23,13 +27,27 @@ namespace ProvidenceKnight.Run
         public bool IsLastStage => StageIndex >= Stages.Count - 1;
         public StageData CurrentStage => Stages[StageIndex];
 
-        public RunState(IReadOnlyList<StageData> stages, IEnumerable<CardData> startingDeck, int handSize, int maxEnergy)
+        public RunState(IReadOnlyList<StageData> stages, UnitData player, IEnumerable<CardData> startingDeck, int handSize, int maxEnergy, int seed = 0)
         {
             Stages = stages;
+            Player = player;
             Deck = new List<CardData>(startingDeck);
             HandSize = handSize;
             MaxEnergy = maxEnergy;
+            Seed = seed;
         }
+
+        public static RunState FromConfig(RunConfig config, int seed) =>
+            new(config.stages, config.player, config.startingDeck.cards, config.handSize, config.startingEnergy, seed);
+
+        /// <summary>현재 스테이지 전용 시드. salt 로 용도(전투 동점 처리 / 보상 뽑기)를 구분한다.</summary>
+        public int StageSeed(int salt)
+        {
+            unchecked { return (Seed * 486187739) ^ (StageIndex * 16777619) ^ (salt * 73856093); }
+        }
+
+        public const int BattleSalt = 1;
+        public const int RewardSalt = 2;
 
         /// <summary>전투 직후 호출: 생존 체력과 (영구 증가했을 수 있는) 최대 에너지를 다음 스테이지로 이어간다.</summary>
         public void CaptureResult(BattleState battle)

@@ -15,7 +15,6 @@ MonoBehaviour:
   id: stage_03
   width: 8
   height: 6
-  player: {fileID: 11400000, guid: 929ee40c51ed07844bc098dd16c81287, type: 2}
   playerStart: {x: 0, y: 3}
   blockedTiles:
   - {x: 3, y: 1}

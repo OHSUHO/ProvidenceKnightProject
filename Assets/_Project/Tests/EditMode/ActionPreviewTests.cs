@@ -43,7 +43,6 @@ namespace ProvidenceKnight.Tests
             var stage = ScriptableObject.CreateInstance<StageData>();
             stage.width = 7;
             stage.height = 5;
-            stage.player = UnitDef(Team.Player, 30);
             stage.playerStart = new Vector2Int(1, 2);
             stage.blockedTiles = new List<Vector2Int> { new(3, 2) };
             var e = UnitDef(Team.Enemy, 6, moveRange: 2, attackDamage: 4);
@@ -54,7 +53,7 @@ namespace ProvidenceKnight.Tests
                 new() { unit = e, position = new Vector2Int(5, 3) },
             };
             var battle = BattleController.Create(stage, hand, 5, 3, seed);
-            battle.SpawnFromStage(stage);
+            battle.SpawnFromStage(stage, UnitDef(Team.Player, 30));
             battle.StartPlayerTurn();
             return battle;
         }

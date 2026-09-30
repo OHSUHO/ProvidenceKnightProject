@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 423be75f19afc59469a3a35cee98e757, type: 3}
+  m_Name: RunConfig
+  m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.RunConfig
+  player: {fileID: 11400000, guid: 929ee40c51ed07844bc098dd16c81287, type: 2}
+  stages:
+  - {fileID: 11400000, guid: ff4de4456aa2441488c5e4d6c747c84b, type: 2}
+  - {fileID: 11400000, guid: ba57bd9e7267fd348b888c37cd0d77b5, type: 2}
+  - {fileID: 11400000, guid: dedbcd37a72701b49879f7c55d3b9aa3, type: 2}
+  startingDeck: {fileID: 11400000, guid: 534d3d0ca1a210440929d538bdb1efa6, type: 2}
+  rewardPool: {fileID: 11400000, guid: 0295925d4edeae4488e77200a795107f, type: 2}
+  handSize: 5
+  startingEnergy: 3
+  rewardChoices: 3

@@ -1987,6 +1987,7 @@ MonoBehaviour:
   enemyUnitPrefab: {fileID: 1359937945511093353, guid: 7b422d835d98deb41a96cf21710e0229, type: 3}
   designSize: {x: 7, y: 5}
   previewStage: {fileID: 11400000, guid: ff4de4456aa2441488c5e4d6c747c84b, type: 2}
+  previewPlayer: {fileID: 11400000, guid: 929ee40c51ed07844bc098dd16c81287, type: 2}
 --- !u!1 &777111158
 GameObject:
   m_ObjectHideFlags: 0
@@ -5391,15 +5392,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0820c8cd209a29840a0ae432a157451b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.View.RunController
-  stages:
-  - {fileID: 11400000, guid: ff4de4456aa2441488c5e4d6c747c84b, type: 2}
-  - {fileID: 11400000, guid: ba57bd9e7267fd348b888c37cd0d77b5, type: 2}
-  - {fileID: 11400000, guid: dedbcd37a72701b49879f7c55d3b9aa3, type: 2}
-  startingDeck: {fileID: 11400000, guid: 534d3d0ca1a210440929d538bdb1efa6, type: 2}
-  rewardPool: {fileID: 11400000, guid: 0295925d4edeae4488e77200a795107f, type: 2}
-  handSize: 5
-  startingEnergy: 3
-  rewardChoices: 3
+  config: {fileID: 11400000, guid: 29d940e13d8fed44f832b6fa4006bd0c, type: 2}
   battle: {fileID: 2107813178}
   rewardScreen: {fileID: 613002183}
 --- !u!114 &2107813178
@@ -5414,10 +5407,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17c8e9d57931ea343bf3cf7037428258, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.View.BattleBootstrap
-  stage: {fileID: 0}
-  deck: {fileID: 0}
-  handSize: 5
-  maxEnergy: 3
   board: {fileID: 737164754}
   eventPlayer: {fileID: 1157415871}
   planPresenter: {fileID: 2019858233}

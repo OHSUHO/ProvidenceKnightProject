@@ -98,7 +98,6 @@ namespace ProvidenceKnight.Tests
             var stage = ScriptableObject.CreateInstance<StageData>();
             stage.width = 6;
             stage.height = 4;
-            stage.player = MakeUnit(Team.Player);
             stage.playerStart = new Vector2Int(0, 1);
             stage.blockedTiles = new List<Vector2Int> { new(3, 3) };
             var slime = MakeUnit(Team.Enemy);
@@ -110,7 +109,7 @@ namespace ProvidenceKnight.Tests
 
             var battle = BattleController.Create(stage, null);
             var state = battle.State;
-            battle.SpawnFromStage(stage);
+            battle.SpawnFromStage(stage, MakeUnit(Team.Player));
 
             Assert.AreEqual(6, state.Grid.Width);
             Assert.AreEqual(3, state.Units.Count);
@@ -122,7 +121,6 @@ namespace ProvidenceKnight.Tests
         public void Stage_Validate_DetectsOverlap()
         {
             var stage = ScriptableObject.CreateInstance<StageData>();
-            stage.player = MakeUnit(Team.Player);
             stage.playerStart = new Vector2Int(0, 0);
             stage.monsters = new List<MonsterSpawn> { new() { unit = MakeUnit(Team.Enemy), position = new Vector2Int(0, 0) } };
             Assert.IsNotEmpty(stage.Validate());

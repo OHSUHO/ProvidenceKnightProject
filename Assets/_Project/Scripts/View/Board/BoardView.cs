@@ -25,6 +25,8 @@ namespace ProvidenceKnight.View
         [Tooltip("아무것도 깔려 있지 않을 때 카메라가 맞출 필드 크기")]
         [SerializeField] Vector2Int designSize = new(7, 5);
         [SerializeField] StageData previewStage;
+        [Tooltip("미리보기에서 플레이어 시작 칸에 놓을 유닛 (게임에서는 RunConfig.player)")]
+        [SerializeField] UnitData previewPlayer;
 
         public float CellSize => cellSize;
         public Transform UnitsRoot => unitsRoot;
@@ -129,7 +131,7 @@ namespace ProvidenceKnight.View
             BuildTiles(previewStage.width, previewStage.height, blocked.Contains);
             foreach (var t in Tiles) MarkPreview(t.gameObject);
 
-            if (previewStage.player != null) SpawnPreviewUnit(previewStage.player, previewStage.playerStart);
+            if (previewPlayer != null) SpawnPreviewUnit(previewPlayer, previewStage.playerStart);
             foreach (var m in previewStage.monsters)
                 if (m.unit != null) SpawnPreviewUnit(m.unit, m.position);
         }
