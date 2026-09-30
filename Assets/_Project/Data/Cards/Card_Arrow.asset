@@ -13,16 +13,21 @@ MonoBehaviour:
   m_Name: Card_Arrow
   m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.CardData
   id: card_arrow
-  cardName: Card
+  cardName: "\uD654\uC0B4\uBC1C\uC0AC"
   cost: 1
   targeting:
-    shape: 0
-    range: 1
-    requiresEnemy: 0
-  effects: []
+    shape: 4
+    range: 3
+    requiresEnemy: 1
+  effects:
+  - rid: 2685641401307234567
   exhaust: 0
   description: 
-  color: {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  color: {r: 1, g: 0, b: 0, a: 1}
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 2685641401307234567
+      type: {class: DamageEffect, ns: ProvidenceKnight.Battle.Effects, asm: ProvidenceKnight}
+      data:
+        amount: 3
