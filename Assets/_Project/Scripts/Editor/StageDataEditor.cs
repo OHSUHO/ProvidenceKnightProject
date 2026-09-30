@@ -151,7 +151,7 @@ namespace ProvidenceKnight.EditorTools
                 int selected = System.Array.IndexOf(_enemies, _monster);
                 var labels = _enemies.Select(u => new GUIContent(
                     $"{Name(u)}  (우선순위 {(u.actionPriority > 0 ? u.actionPriority.ToString() : "-")})",
-                    $"HP {u.maxHp} · 이동 {u.moveRange} · 공격 {u.attackDamage}")).ToArray();
+                    $"HP {u.maxHp} · 카드 {string.Join(", ", u.cards.Where(c => c != null).Select(c => c.cardName))}")).ToArray();
                 int next = GUILayout.SelectionGrid(selected, labels, Mathf.Min(3, _enemies.Length));
                 if (next != selected && next >= 0) _monster = _enemies[next];
             }

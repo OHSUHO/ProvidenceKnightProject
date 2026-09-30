@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ProvidenceKnight.Battle.Effects;
 using UnityEngine;
@@ -24,6 +25,11 @@ namespace ProvidenceKnight.Data
         [Header("View")]
         [TextArea] public string description;   // 비어 있으면 효과로 자동 생성
         public Color color = new(0.9f, 0.9f, 0.9f);
+
+        public bool Has(EffectKind kind) => effects != null && effects.Any(e => e != null && e.Kind == kind);
+
+        /// <summary>효과 중 피해 합계 (몬스터 의도 표시용).</summary>
+        public int TotalDamage => effects == null ? 0 : effects.OfType<DamageEffect>().Sum(e => e.amount);
 
         public string GetDescription()
         {

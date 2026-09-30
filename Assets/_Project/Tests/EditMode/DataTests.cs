@@ -89,8 +89,18 @@ namespace ProvidenceKnight.Tests
         public void Validator_ValidData_HasNoIssues()
         {
             var goblin = Enemy("unit_goblin");
-            var db = Db(Card("card_slash", new DamageEffect { amount = 6 }), goblin, ValidStage("stage_01", goblin));
+            var slash = Card("card_slash", new DamageEffect { amount = 6 });
+            goblin.cards.Add(slash);
+            var db = Db(slash, goblin, ValidStage("stage_01", goblin));
             CollectionAssert.IsEmpty(DataValidator.Validate(db, null).Select(i => i.ToString()));
+        }
+
+        [Test]
+        public void Validator_FindsEnemyWithoutCards()
+        {
+            var goblin = Enemy("unit_goblin");
+            var db = Db(Card("card_slash", new DamageEffect { amount = 6 }), goblin, ValidStage("stage_01", goblin));
+            CollectionAssert.Contains(DataValidator.Validate(db, null).Select(i => i.ToString()), "unit_goblin: 몬스터인데 카드가 없음");
         }
 
         [Test]

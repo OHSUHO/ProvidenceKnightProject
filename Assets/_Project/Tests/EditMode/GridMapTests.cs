@@ -49,14 +49,6 @@ namespace ProvidenceKnight.Tests
         }
 
         [Test]
-        public void Reachable_Diagonal_WhenDirections8()
-        {
-            var g = new GridMap(3, 3) { MoveDirections = GridMap.Directions8 };
-            var reach = g.GetReachable(new Vector2Int(1, 1), 1);
-            Assert.AreEqual(8, reach.Count);
-        }
-
-        [Test]
         public void FindPath_GoesAroundObstacle()
         {
             // . . .

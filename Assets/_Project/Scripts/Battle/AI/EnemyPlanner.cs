@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ProvidenceKnight.Data;
+using ProvidenceKnight.Battle.Effects;
 using UnityEngine;
 
 namespace ProvidenceKnight.Battle.AI
@@ -33,51 +34,47 @@ namespace ProvidenceKnight.Battle.AI
         }
 
         /// <summary>
-        /// 몬스터 한 마리의 행동 선택 (격자는 바꾸지 않는다).
-        /// ① 제자리에서 공격 가능 → 공격 ② 이동력 안에서 공격 가능한 칸 중 가장 가까운 칸으로 이동 후 공격
-        /// ③ 플레이어까지 경로 거리가 가장 짧아지는 칸으로 이동 ④ 대기.
-        /// 동점은 BFS 발견 순서(걸음 수 → 상·우·하·좌)로 정해진다.
+        /// 몬스터 한 마리의 행동 선택 = 카드 한 장 (격자는 바꾸지 않는다).
+        /// ① 지금 자리에서 플레이어를 칠 수 있는 공격 카드가 있으면 그중 피해가 가장 큰 카드
+        /// ② 없으면 이동 카드로 플레이어까지 경로 거리가 가장 짧아지는 칸으로 이동 ③ 그것도 안 되면 대기.
+        /// 동점은 카드 순서, 그다음 BFS 발견 순서(걸음 수 → 상·우·하·좌)로 정해진다.
         /// </summary>
         public static EnemyAction ChooseAction(GridMap grid, Unit enemy, Unit target, int order = 1)
         {
             if (target == null || target.IsDead) return EnemyAction.Wait(enemy, order);
 
-            var pattern = enemy.Data.AttackPattern;
-            int damage = enemy.Data.attackDamage;
-            var hit = new[] { target.Position };
+            var cards = enemy.Data.cards.Where(c => c != null).ToList();
 
-            if (CanHitFrom(grid, enemy.Position, enemy, pattern, target))
-                return EnemyAction.Attack(enemy, order, null, hit, damage);
-
-            if (enemy.Data.moveRange <= 0) return EnemyAction.Wait(enemy, order);
-
-            var reachable = grid.GetReachableOrdered(enemy.Position, enemy.Data.moveRange);
-
-            foreach (var (cell, _) in reachable)
+            CardData bestAttack = null;
+            foreach (var card in cards.Where(c => c.Has(EffectKind.Attack)))
             {
-                if (CanHitFrom(grid, cell, enemy, pattern, target))
-                    return EnemyAction.Attack(enemy, order, grid.FindPath(enemy.Position, cell), hit, damage);
+                if (!Targeting.GetCells(grid, enemy.Position, enemy.Team, card.targeting, enemy).Contains(target.Position)) continue;
+                if (bestAttack == null || card.TotalDamage > bestAttack.TotalDamage) bestAttack = card;
             }
+            if (bestAttack != null) return EnemyAction.Attack(enemy, order, bestAttack, target.Position);
 
             var field = grid.GetDistanceFieldIgnoringUnits(target.Position);
             int bestDist = field.TryGetValue(enemy.Position, out var cur) ? cur : int.MaxValue;
-            Vector2Int? best = null;
-            foreach (var (cell, _) in reachable)
+            CardData bestCard = null;
+            Vector2Int bestCell = default;
+            foreach (var card in cards.Where(c => c.Has(EffectKind.Move) && !c.Has(EffectKind.Attack)))
             {
-                if (field.TryGetValue(cell, out var d) && d < bestDist)
+                foreach (var cell in Targeting.GetCells(grid, enemy.Position, enemy.Team, card.targeting, enemy))
                 {
-                    bestDist = d;
-                    best = cell;
+                    if (field.TryGetValue(cell, out var d) && d < bestDist)
+                    {
+                        bestDist = d;
+                        bestCard = card;
+                        bestCell = cell;
+                    }
                 }
             }
 
-            return best.HasValue
-                ? EnemyAction.Move(enemy, order, grid.FindPath(enemy.Position, best.Value))
+            return bestCard != null
+                ? EnemyAction.Move(enemy, order, bestCard, bestCell, grid.FindPath(enemy.Position, bestCell))
                 : EnemyAction.Wait(enemy, order);
         }
 
-        static bool CanHitFrom(GridMap grid, Vector2Int origin, Unit enemy, TargetPattern pattern, Unit target) =>
-            Targeting.GetCells(grid, origin, enemy.Team, pattern, enemy).Contains(target.Position);
 
         /// <summary>
         /// 위험 지역을 "이 몬스터 차례가 됐을 때의 격자" 기준으로 계산한다.
@@ -95,51 +92,45 @@ namespace ProvidenceKnight.Battle.AI
         }
 
         /// <summary>
-        /// 위험 지역: 이 몬스터가 걸어갈 수 있는 칸과, 그 칸들 중 어디서든 공격할 수 있는 모든 칸 (주어진 격자 그대로 기준).
+        /// 위험 지역: 몬스터는 한 턴에 카드 한 장만 쓰므로, 이동 카드로 갈 수 있는 칸(moveCells)과
+        /// 지금 자리에서 공격 카드로 칠 수 있는 칸(attackCells)을 따로 보여준다 (주어진 격자 그대로 기준).
         /// </summary>
         public static (List<Vector2Int> moveCells, HashSet<Vector2Int> attackCells) GetThreatArea(GridMap grid, Unit enemy)
         {
             var moveCells = new List<Vector2Int>();
-            var origins = new List<Vector2Int> { enemy.Position };
-            if (enemy.Data.moveRange > 0)
+            var attackCells = new HashSet<Vector2Int>();
+            foreach (var card in enemy.Data.cards.Where(c => c != null))
             {
-                foreach (var (cell, _) in grid.GetReachableOrdered(enemy.Position, enemy.Data.moveRange))
+                if (card.Has(EffectKind.Attack))
                 {
-                    moveCells.Add(cell);
-                    origins.Add(cell);
+                    foreach (var c in Targeting.GetCells(grid, enemy.Position, enemy.Team, card.targeting.AnyOccupant(), enemy))
+                        if (c != enemy.Position) attackCells.Add(c);
+                }
+                else if (card.Has(EffectKind.Move))
+                {
+                    foreach (var c in Targeting.GetCells(grid, enemy.Position, enemy.Team, card.targeting, enemy))
+                        if (!moveCells.Contains(c)) moveCells.Add(c);
                 }
             }
-
-            var pattern = enemy.Data.AttackPattern.AnyOccupant();
-            var attackCells = new HashSet<Vector2Int>();
-            foreach (var o in origins)
-                foreach (var c in Targeting.GetCells(grid, o, enemy.Team, pattern, enemy))
-                    if (c != enemy.Position) attackCells.Add(c);
             return (moveCells, attackCells);
         }
     }
 
-    /// <summary>적 행동 하나를 전투 상태에 적용한다. 계획(복사본)과 실제 실행이 같은 함수를 쓴다.</summary>
+    /// <summary>적 행동(카드 한 장)을 전투 상태에 적용한다. 계획(복사본)과 실제 실행이 같은 함수를 쓴다.</summary>
     public static class EnemyActionResolver
     {
         public static void Apply(BattleState state, EnemyAction action)
         {
-            if (state.IsBattleOver || action.Type == IntentType.Wait) return;
+            if (state.IsBattleOver || action.Card == null) return;
 
             var unit = state.GetUnit(action.ActorId);
             if (unit == null || unit.IsDead) return;
 
-            if (action.Path.Count > 0 && !BattleRules.TryMoveAlongPath(state, unit, action.Path))
-            {
-                Debug.LogError($"[EnemyActionResolver] 계획된 경로로 이동할 수 없음: {action}");
-                return;
-            }
-
-            if (action.Type != IntentType.Attack) return;
-            foreach (var cell in action.AttackCells)
+            var ctx = new EffectContext(state, unit, action.Target, action.Card);
+            foreach (var effect in action.Card.effects)
             {
                 if (state.IsBattleOver) break;
-                BattleRules.AttackCell(state, unit, cell, action.Damage);
+                effect?.Resolve(ctx);
             }
         }
     }

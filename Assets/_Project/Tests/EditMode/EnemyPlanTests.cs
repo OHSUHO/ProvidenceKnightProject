@@ -22,11 +22,8 @@ namespace ProvidenceKnight.Tests
             d.displayName = team == Team.Player ? "P" : "E";
             d.team = team;
             d.maxHp = hp;
-            d.moveRange = moveRange;
-            d.attackDamage = attackDamage;
+            d.cards = TestUnits.Cards(moveRange, attackDamage, shape, attackRange);
             d.actionPriority = priority;
-            d.attackShape = shape;
-            d.attackRange = attackRange;
             return d;
         }
 
@@ -122,15 +119,17 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void TwoEnemies_OneOpenSlot_OnlyOneShowsAttack_AndThatIsWhatHappens([Range(0, 9)] int seed)
         {
+            // 플레이어 옆 빈 칸은 (1,1) 하나뿐. 거기 선 몬스터만 공격하고, 뒤의 몬스터는 이동 카드를 쓴다 (한 턴에 카드 한 장)
             var goblin = UnitDef(Team.Enemy, 10, moveRange: 3, attackDamage: 5);
             var battle = MakeBattle(5, 3, new Vector2Int(0, 1),
-                new[] { (goblin, new Vector2Int(3, 1)), (goblin, new Vector2Int(3, 0)) },
+                new[] { (goblin, new Vector2Int(1, 1)), (goblin, new Vector2Int(3, 1)) },
                 blocked: new[] { new Vector2Int(0, 0), new Vector2Int(0, 2) }, seed: seed);
 
             var plan = battle.State.EnemyPlan;
             Assert.AreEqual(2, plan.Actions.Count);
             Assert.AreEqual(1, plan.Actions.Count(a => a.Type == IntentType.Attack), "공격 의도는 한 마리만");
-            Assert.AreEqual(new Vector2Int(1, 1), plan.Actions.Single(a => a.Type == IntentType.Attack).Destination);
+            Assert.AreEqual(new Vector2Int(1, 1), plan.Actions.Single(a => a.Type == IntentType.Attack).From);
+            Assert.AreEqual(1, plan.Actions.Count(a => a.Type == IntentType.Move), "나머지 한 마리는 이동");
             Assert.AreEqual(95, plan.PredictedPlayerHp);
 
             AssertPlanMatchesExecution(battle, 1);
@@ -277,29 +276,29 @@ namespace ProvidenceKnight.Tests
         }
 
         [Test]
-        public void MoveThenAttack_PicksClosestAttackTile()
+        public void Move_PicksCellClosestToPlayer()
         {
-            // 공격 가능한 칸이 여러 개면 걸음 수가 가장 적은 칸
+            // 사거리 밖이면 이동 카드 한 장만 쓴다 (이동 후 공격은 다음 턴)
             var e = UnitDef(Team.Enemy, 10, moveRange: 4, attackDamage: 5);
             var battle = MakeBattle(5, 5, new Vector2Int(2, 2), new[] { (e, new Vector2Int(4, 2)) });
             var action = battle.State.EnemyPlan.Actions.Single();
 
-            Assert.AreEqual(IntentType.Attack, action.Type);
+            Assert.AreEqual(IntentType.Move, action.Type);
             Assert.AreEqual(new Vector2Int(3, 2), action.Destination);
             Assert.AreEqual(1, action.Steps);
         }
 
         [Test]
-        public void ThreatArea_CoversMoveRangePlusAttackReach()
+        public void ThreatArea_MoveCardCellsAndAttackCardFromCurrentPosition()
         {
             var grid = new GridMap(7, 1);
-            var enemy = new Unit(1, UnitDef(Team.Enemy, 10, moveRange: 2), new Vector2Int(3, 0));
+            var enemy = new Unit(1, UnitDef(Team.Enemy, 10, moveRange: 2, attackDamage: 1), new Vector2Int(3, 0));
             grid.PlaceUnit(enemy, enemy.Position);
 
             var (move, attack) = EnemyPlanner.GetThreatArea(grid, enemy);
 
             CollectionAssert.AreEquivalent(new[] { new Vector2Int(2, 0), new Vector2Int(4, 0), new Vector2Int(1, 0), new Vector2Int(5, 0) }, move);
-            CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 4, 5, 6 }.Select(x => new Vector2Int(x, 0)), attack);
+            CollectionAssert.AreEquivalent(new[] { new Vector2Int(2, 0), new Vector2Int(4, 0) }, attack);   // 이동 후 공격은 못 하므로 제자리 인접 칸만
         }
 
         [Test]

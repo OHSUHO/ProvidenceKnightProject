@@ -13,12 +13,17 @@ MonoBehaviour:
   m_Name: GameDatabase
   m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.GameDatabase
   cards:
+  - {fileID: 11400000, guid: c1fcf3658948b8f46a02094c41992a91, type: 2}
   - {fileID: 11400000, guid: 1e248b501f6387b40b2baa74fd36e143, type: 2}
   - {fileID: 11400000, guid: 9b335730566c7ad4885e4a468bc46a42, type: 2}
   - {fileID: 11400000, guid: 8e0e8e3f99ce7c74d889d657c3e2ad42, type: 2}
   - {fileID: 11400000, guid: 2eb544fdcffe4b2499d9c790cab6fe1a, type: 2}
   - {fileID: 11400000, guid: c1d0ae37d314a8a40a18756f784a6f5f, type: 2}
   - {fileID: 11400000, guid: 2f7f934786f4b1a43823cd70b5802a5c, type: 2}
+  - {fileID: 11400000, guid: 3a1f0000000000000000000000000001, type: 2}
+  - {fileID: 11400000, guid: 3a1f0000000000000000000000000002, type: 2}
+  - {fileID: 11400000, guid: 3a1f0000000000000000000000000004, type: 2}
+  - {fileID: 11400000, guid: 3a1f0000000000000000000000000003, type: 2}
   - {fileID: 11400000, guid: 57c0fe93452bab74b860a1b5cfcdb69f, type: 2}
   - {fileID: 11400000, guid: 88e8f28770483734ab9bada7f8b3858a, type: 2}
   - {fileID: 11400000, guid: 0fb818f0be5cbf942b881b9e9fdbb92d, type: 2}

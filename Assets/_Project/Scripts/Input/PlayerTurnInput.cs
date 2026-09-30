@@ -255,7 +255,13 @@ namespace ProvidenceKnight.Input
             var action = State.EnemyPlan.For(unit.Id);
             var order = action != null ? $"이번 턴 {action.Order}번째" : "이번 턴 행동 없음";
             var priority = d.actionPriority > 0 ? $"우선순위 {d.actionPriority}" : "우선순위 미지정";
-            hud.ShowTooltip(d.displayName, $"{hp}\n이동 {d.moveRange} · {d.AttackPattern.Describe()} · 공격 {d.attackDamage}\n{order} ({priority})");
+            var next = action?.Card != null
+                ? $"\n이번 턴 카드: {action.Card.cardName} — {action.Card.GetDescription().Replace('\n', ' ')}"
+                : "";
+            var owned = d.cards.Count > 0
+                ? "\n보유 카드: " + string.Join(", ", d.cards.Where(c => c != null).Select(c => c.cardName))
+                : "";
+            hud.ShowTooltip(d.displayName, $"{hp}\n{order} ({priority}){next}{owned}");
         }
     }
 }

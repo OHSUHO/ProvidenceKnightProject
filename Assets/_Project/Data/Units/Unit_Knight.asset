@@ -16,10 +16,7 @@ MonoBehaviour:
   displayName: "\uAE30\uC0AC"
   team: 0
   maxHp: 30
-  moveRange: 0
-  attackShape: 2
-  attackRange: 1
-  attackDamage: 0
+  cards: []
   actionPriority: 0
   viewPrefab: {fileID: 0}
   sprite: {fileID: 0}

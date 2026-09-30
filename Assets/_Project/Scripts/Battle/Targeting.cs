@@ -30,7 +30,7 @@ namespace ProvidenceKnight.Battle
                     return result;
 
                 case TargetShape.Adjacent:
-                    foreach (var d in grid.MoveDirections)
+                    foreach (var d in GridMap.Directions4)
                         AddIfTargetable(grid, origin + d, result);
                     break;
 

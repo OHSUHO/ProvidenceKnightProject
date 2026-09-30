@@ -16,10 +16,9 @@ MonoBehaviour:
   displayName: "\uACE0\uBE14\uB9B0"
   team: 1
   maxHp: 18
-  moveRange: 3
-  attackShape: 2
-  attackRange: 1
-  attackDamage: 7
+  cards:
+  - {fileID: 11400000, guid: 3a1f0000000000000000000000000001, type: 2}
+  - {fileID: 11400000, guid: 3a1f0000000000000000000000000002, type: 2}
   actionPriority: 0
   viewPrefab: {fileID: 0}
   sprite: {fileID: 0}
