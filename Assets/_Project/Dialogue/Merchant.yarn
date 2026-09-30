@@ -1,0 +1,25 @@
+title: Merchant
+---
+<<declare $merchant_met = false>>
+<<if $merchant_met>>
+    상인: 또 왔군! 이번엔 뭘 찾나?
+<<else>>
+    상인: 어서 오게, 나그네. 이런 위험한 곳까지 용케 왔군.
+    상인: 장비가 필요하면 내게 말하게. 값은 정직하게 받지.
+    <<set $merchant_met to true>>
+<<endif>>
+<<jump MerchantMenu>>
+===
+title: MerchantMenu
+---
+-> 물건을 보여 줘
+    상인: 마음껏 둘러보게.
+    <<open_shop>>
+    상인: 또 필요한 게 생기면 들르게.
+-> 이 주변에 대해 묻는다
+    상인: 위쪽 통로엔 고블린들이 우글거리지. 싸우기 전에 장비부터 갖추게.
+    상인: 방어구는 레벨이 모자라면 못 입으니, 경험을 좀 쌓고 오게.
+    <<jump MerchantMenu>>
+-> 그냥 지나가던 길이야
+    상인: 그러게. 몸조심하게.
+===

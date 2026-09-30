@@ -1,3 +1,4 @@
+using ProvidenceKnight.View;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -97,6 +98,12 @@ namespace ProvidenceKnight.Player
         {
             var kb = Keyboard.current;
             if (kb == null) return;
+            if (GamePause.IsPaused)
+            {
+                _jumpPressed = false;   // 메뉴·대화 중에 누른 점프가 닫은 뒤에 나가지 않게
+                _jumpHeld = false;
+                return;
+            }
             var jump = kb[jumpKey];
             if (jump.wasPressedThisFrame) _jumpPressed = true;
             _jumpHeld = jump.isPressed;
@@ -111,7 +118,7 @@ namespace ProvidenceKnight.Player
             // 입력
             int dir = 0;
             bool down = false, up = false, run = false;
-            if (kb != null)
+            if (kb != null && !GamePause.IsPaused)
             {
                 if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) dir -= 1;
                 if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) dir += 1;

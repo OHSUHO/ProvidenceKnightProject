@@ -24,6 +24,15 @@ namespace ProvidenceKnight.Data
             handSize = a.handSize + b.handSize,
         };
 
+        public static StatBlock operator -(StatBlock a, StatBlock b) => new()
+        {
+            maxHp = a.maxHp - b.maxHp,
+            attack = a.attack - b.attack,
+            defense = a.defense - b.defense,
+            maxEnergy = a.maxEnergy - b.maxEnergy,
+            handSize = a.handSize - b.handSize,
+        };
+
         public override string ToString()
         {
             var parts = new System.Collections.Generic.List<string>();
