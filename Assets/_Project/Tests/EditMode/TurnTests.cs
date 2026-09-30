@@ -16,9 +16,7 @@ namespace ProvidenceKnight.Tests
             var d = ScriptableObject.CreateInstance<UnitData>();
             d.team = team;
             d.maxHp = hp;
-            d.moveRange = moveRange;
-            d.attackRange = attackRange;
-            d.attackDamage = attackDamage;
+            d.cards = TestUnits.Cards(moveRange, attackDamage, TargetShape.Adjacent, attackRange);
             return d;
         }
 
@@ -57,7 +55,7 @@ namespace ProvidenceKnight.Tests
         }
 
         [Test]
-        public void Plan_MovesThenAttacks_WhenReachableWithinRange()
+        public void Plan_OnlyMoves_EvenIfAttackWouldBePossibleAfterMoving()
         {
             var grid = new GridMap(5, 1);
             var player = new Unit(0, UnitDef(Team.Player, 20), new Vector2Int(0, 0));
@@ -67,7 +65,7 @@ namespace ProvidenceKnight.Tests
 
             var intent = EnemyPlanner.ChooseAction(grid, enemy, player);
 
-            Assert.AreEqual(IntentType.Attack, intent.Type);
+            Assert.AreEqual(IntentType.Move, intent.Type);
             Assert.AreEqual(new Vector2Int(1, 0), intent.Destination);
         }
 
@@ -154,8 +152,12 @@ namespace ProvidenceKnight.Tests
 
             battle.StartPlayerTurn();
             battle.RunEnemyTurn();
-            Assert.AreEqual(new Vector2Int(1, 0), enemy.Position);   // 사거리 안 = 이동+공격
-            Assert.AreEqual(15, state.Player.Hp);
+            Assert.AreEqual(new Vector2Int(1, 0), enemy.Position);   // 사거리 안까지 이동만
+            Assert.AreEqual(20, state.Player.Hp);
+
+            battle.StartPlayerTurn();
+            battle.RunEnemyTurn();
+            Assert.AreEqual(15, state.Player.Hp);   // 다음 턴에 공격 카드
         }
 
         [Test]

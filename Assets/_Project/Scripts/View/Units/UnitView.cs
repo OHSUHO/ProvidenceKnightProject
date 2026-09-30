@@ -104,10 +104,10 @@ namespace ProvidenceKnight.View
                     intentBadge.Show("대기", waitColor, action.Order);
                     break;
                 case IntentType.Move:
-                    intentBadge.Show($"이동 {action.Steps}", moveColor, action.Order);
+                    intentBadge.Show($"{action.Card.cardName} {action.Steps}", moveColor, action.Order);
                     break;
                 default:
-                    intentBadge.Show(action.Steps > 0 ? $"이동 {action.Steps} · 공격 {action.Damage}" : $"공격 {action.Damage}", attackColor, action.Order);
+                    intentBadge.Show($"{action.Card.cardName} {action.Damage}", attackColor, action.Order);
                     break;
             }
         }

@@ -32,8 +32,7 @@ namespace ProvidenceKnight.Tests
             var d = ScriptableObject.CreateInstance<UnitData>();
             d.team = team;
             d.maxHp = hp;
-            d.moveRange = moveRange;
-            d.attackDamage = attackDamage;
+            d.cards = TestUnits.Cards(moveRange, attackDamage);
             return d;
         }
 

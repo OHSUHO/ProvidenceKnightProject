@@ -89,6 +89,8 @@ namespace ProvidenceKnight.Data
 
                 case UnitData unit:
                     if (string.IsNullOrWhiteSpace(unit.displayName)) issues.Add(new DataIssue(unit, "이름이 비어 있음"));
+                    if (unit.team == Team.Enemy && unit.cards.Count == 0) issues.Add(new DataIssue(unit, "몬스터인데 카드가 없음"));
+                    CheckCardList(unit, unit.cards, issues);
                     break;
 
                 case StageData stage:
