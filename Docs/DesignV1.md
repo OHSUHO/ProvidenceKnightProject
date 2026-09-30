@@ -104,10 +104,10 @@ Scripts/
     BattleState(+BattlePhase), BattleController, BattleRules, BattleEvents(이벤트 레코드·싱크)
   Battle/AI/         ProvidenceKnight.Battle.AI       EnemyPlanner, EnemyActionResolver, EnemyTurnPlan, EnemyAction
   Battle/Effects/    ProvidenceKnight.Battle.Effects  CardEffect(추상)+EffectContext, MoveEffect, DamageEffect, BlockEffect, GainMaxEnergyEffect
-  Run/               ProvidenceKnight.Run             RunState, RewardPicker(System.Random 주입)  (RunSaveData는 P4)
-  Data/              ProvidenceKnight.Data            CardData, UnitData, StageData, DeckData, RewardPoolData, TargetPattern(+TargetShape)
+  Run/               ProvidenceKnight.Run             RunState(+시드), RewardPicker(System.Random 주입), RunSaveData(+RunSaveStore)
+  Data/              ProvidenceKnight.Data            GameDataAsset(id), CardData, UnitData, StageData, DeckData, RewardPoolData, RunConfig, GameDatabase, DataValidator, TargetPattern(+TargetShape)
   View/, Input/      (§3)
-  Editor/            ProvidenceKnight.EditorTools     CardDataEditor  ← 별도 asmdef ProvidenceKnight.Editor (Editor 전용)
+  Editor/            ProvidenceKnight.EditorTools     CardDataEditor, StageDataEditor, BoardViewEditor, GameDataIdAssigner, GameDatabaseBuilder, ProjectDataValidator, DynamicFontSaveCleaner  ← 별도 asmdef ProvidenceKnight.Editor (Editor 전용)
 ```
 
 - 처음 계획한 `Core/`는 만들지 않았다. `GridMap`이 `Unit`을 직접 들고 있어서 Core → Battle 역의존이 생기기 때문. `TargetPattern`·`Team`은 에셋에 직렬화되는 데이터 정의라 `Data`에 둔다.
@@ -168,7 +168,7 @@ P3에서 실제로 만든 구성 (루트는 씬 최상위):
 
 ```
 Main Camera                    (CameraFramer: HUD의 BoardArea 사각형 안에 보드를 맞춤, 에디터에서도 동작)
-Battle                         (BattleBootstrap: 조립 / RunController: 스테이지·보상 흐름. P4에서 RunConfig로 설정 이동)
+Battle                         (BattleBootstrap: 조립 / RunController: RunConfig 에셋으로 스테이지·보상 흐름)
 Board                          (BoardView: 좌표 변환, Tile·Unit 프리팹 생성. [인스펙터] "스테이지 미리보기" 버튼)
 ├─ Tiles                       ← Tile.prefab 인스턴스 (런타임 생성)
 ├─ Overlays                    (HighlightLayer: 카드 대상·위험 지역·호버)
@@ -212,7 +212,7 @@ EventSystem                    (InputSystemUIInputModule)
 | `UnitView`(361줄, 코드 생성) | `Unit` 프리팹 + 작은 컴포넌트 4개 |
 | `HudView` + `CardView` + `UI` 헬퍼 | 씬 Canvas + `BattleHud` + `HandView`/`CardView`/`EnergyView`/`DeckPreviewView`/`TurnInfoView`/`ToastView`/`UnitTooltipView`/`ResultBannerView` |
 | `RewardView` | `RewardScreen` (씬에 배치, `Card` 프리팹 재사용) |
-| `RunRunner` | `RunController` (P3는 이름만 변경, 설정은 P4에서 `RunConfig` SO로 이동) |
+| `RunRunner` | `RunController` + `RunConfig` 에셋 (P4) |
 | `TweenClock`(P1에서 삭제 → `AnimationQueue`), `SpriteFactory` | `BattleEventPlayer`(인스턴스 큐, `IsPlaying`), `Art/Sprites/{Square,Triangle,Circle}.png`, TMP 폰트 에셋 |
 
 ---
@@ -226,15 +226,15 @@ EventSystem                    (InputSystemUIInputModule)
 | `GameDataAsset` (추상 베이스) | `string id` | 모든 데이터 SO의 부모. id는 생성 시 자동 부여, **중복 검증** |
 | `CardData` | id, 이름, 코스트, `TargetPattern`, `[SerializeReference] List<CardEffect>`, exhaust, 아트, 설명(비우면 효과로 자동 생성) | 효과 추가는 인스펙터 "＋ Effect" 드롭다운 (커스텀 에디터) |
 | `UnitData` | id, 이름, 팀, maxHp, 스프라이트/색/`viewPrefab`, **적 전용**: moveRange, 공격 `TargetPattern`, 피해, `actionPriority`(§1.3) | 나중에 `actionPattern`(행동 순환) 추가 자리 |
-| `StageData` | id, width/height, 장애물, 플레이어 시작 위치, 몬스터 배치 | **그리드 페인팅 인스펙터** (§4.2) |
+| `StageData` | id, width/height, 장애물, 플레이어 시작 위치, 몬스터 배치 (플레이어 유닛은 `RunConfig`) | **그리드 페인팅 인스펙터** (§4.2) |
 | `DeckData`, `RewardPoolData` | 카드 리스트 | 현행 유지 |
 | `RunConfig` *(신규)* | 플레이어 UnitData, 스테이지 순서, 시작 덱, 보상 풀, 손패 수, 시작 에너지, 보상 선택지 수 | `RunRunner`/`BattleRunner` 인스펙터에 흩어진 값을 한 곳으로 |
-| `GameDatabase` *(신규)* | 모든 Card/Unit/Stage 목록 + `Get<T>(id)` | 에디터 메뉴 "Rebuild"로 `AssetDatabase`에서 자동 수집. `BattleBootstrap`이 직접 참조 (Resources 폴더 미사용) |
+| `GameDatabase` *(신규)* | 모든 Card/Unit/Stage 목록 + `Get<T>(id)` | 데이터 에셋이 추가·삭제·이동되면 자동으로 다시 모음 (메뉴 `ProvidenceKnight/Rebuild Database`도 있음). 세이브 불러오기에서 id → 에셋 (Resources 폴더 미사용) |
 
 ### 4.2 스테이지 그리드 페인팅 인스펙터
 
 - `StageData` 인스펙터에 칸 격자를 그려 **클릭/드래그로 칠한다**.
-- 브러시: `바닥` / `장애물` / `플레이어 시작` / `몬스터(UnitData 선택)` / `지우개`
+- 브러시: `장애물` / `플레이어 시작` / `몬스터(UnitData 선택)` / `지우개` (P4: `바닥`은 `지우개`와 하는 일이 같아 하나로 합침. 오른쪽 클릭 = 지우개)
 - width/height를 바꾸면 격자 밖으로 나간 배치를 경고하고 잘라낸다.
 - 칸마다 몬스터 이름 첫 글자와 색, 실행 순서 번호를 표시한다 (§1.3 동점 처리와 순서가 연결되므로).
 - `Validate()` 결과를 인스펙터 상단에 빨간 박스로 띄운다.
@@ -261,7 +261,7 @@ EventSystem                    (InputSystemUIInputModule)
 - **신규 — 행동 순서**
   - `Order_PrioritizedBeforeUnprioritized`, `Order_LowerPriorityValueActsFirst`
   - `Order_TiesAreShuffled_ButFixedForWholeStage`: 여러 턴이 지나고 몬스터가 죽어도 남은 몬스터의 상대 순서가 그대로인지 (시드 고정)
-- **신규 — 데이터**: `AllGameData_IsValid`.
+- **신규 — 데이터**: `ProjectData_HasNoIssues` (메뉴 Validate All Data와 같은 검사), 검증 항목별 테스트, 세이브 왕복 (`DataTests`, `SaveTests`)
 
 ---
 
@@ -283,7 +283,7 @@ EventSystem                    (InputSystemUIInputModule)
 | **P1 규칙** | `EnemyPlanner`(순차 시뮬레이션) + `EnemyTurnPlan` + 경로 거리 + 계획 그대로 실행 + 행동 순서(우선순위). `TargetPattern`을 적 공격에 적용. 임시로 기존 `GridView`에 경로·공격 칸·순서 번호·위험 지역(적 호버) 표시 | §5 불변식 테스트 통과. 표시된 공격이 막혀서 불발되는 일이 없음 |
 | **P2 로직 분리** ✅ | `BattleState`/`BattleController` 분리, 이벤트 스트림, `CardEffect` 다형성 + 카드 에셋 마이그레이션, `BattleRules` | 기존 테스트 이전 완료. `BattleState`에 효과 `switch` 없음 |
 | **P3 씬/프리팹** ✅ | §3 하이어라키와 프리팹, TMP 폰트, `BattleEventPlayer`, `PlayerTurnInput`, `CameraFramer`, 위험 지역·툴팁·피해 예고 UI | 씬 뷰에서 HUD와 필드 레이아웃을 직접 편집 가능. `TweenClock`·`SpriteFactory`·`HudView` 삭제 |
-| **P4 데이터** | `GameDataAsset` id, `GameDatabase`, `RunConfig`, 스테이지 그리드 페인팅 인스펙터, 데이터 검증 메뉴·테스트, (세이브 구조) | 새 스테이지를 인스펙터에서 칠해서 만들고 바로 플레이 가능 |
+| **P4 데이터** ✅ | `GameDataAsset` id, `GameDatabase`, `RunConfig`, 스테이지 그리드 페인팅 인스펙터, 데이터 검증 메뉴·테스트, (세이브 구조) | 새 스테이지를 인스펙터에서 칠해서 만들고 바로 플레이 가능 |
 
 > P1을 먼저 하는 이유: 규칙이 확정되어야 P2의 이벤트 모양(`EnemyPlanChanged`, `UnitAttacked(Cells)`)과 P3의 표시 요소가 정해진다.
 
@@ -322,3 +322,15 @@ EventSystem                    (InputSystemUIInputModule)
 - **그 밖의 표시**: `Alt`를 누르고 있으면 전체 위험 지역(모든 적의 공격 가능 칸 합집합). 유닛 툴팁(오른쪽 위)은 플레이어도 표시 — 적 턴에 받을 피해 내역. 의도·피해 예고 말풍선은 **한 줄**로 줄여 자기 칸 안에 들어가게 함 (위아래로 붙은 유닛끼리 말풍선이 HP 바를 가리던 문제)
 - **확인**: 테스트 103개 → 115개 전부 통과. Play 모드에서 카드 사용·행동 미리보기·3턴 진행(화면 위치와 로직 위치 일치)·승리 → 보상 선택 → 2스테이지(9x6) 시작과 카메라 재배치까지 확인
 - **남은 것**: 카드 UI 호버로 `Self` 카드(방어 등) 미리보기, 유닛 이름이 영문 데이터(`Knight`, `Slime`) → P4 데이터 정리 때 한글화, 실제 창 포커스 상태에서의 연출 템포 확인
+
+### P4 완료 (2026-09-30)
+
+- **id**: 모든 데이터 SO가 `GameDataAsset`을 상속하고 `id`를 가진다. 에셋을 만들거나 복제하면 파일 이름으로 자동 부여 (`Card_EnergyAwakening` → `card_energy_awakening`, 복제본은 `_2` 등으로 새 id — `Editor/GameDataIdAssigner`). 파일 이름을 바꿔도 id는 그대로. 기존 에셋 18개에 id를 붙이고 유닛 이름을 한글로 바꿈 (기사·슬라임·고블린)
+- **GameDatabase**(`Data/GameDatabase.asset`): 카드·유닛·스테이지·덱·보상 풀 목록 + `Get<T>(id)`. 데이터 에셋이 추가·삭제·이동되면 자동으로 다시 모은다 (`Editor/GameDatabaseBuilder`, `EditorApplication.delayCall`이라 에디터 창이 비활성이면 다음 갱신 때 반영)
+- **RunConfig**(`Data/RunConfig.asset`): 플레이어·스테이지 순서·시작 덱·보상 풀·손패/에너지/보상 선택지 수. `RunController`는 이것만 참조. **플레이어 유닛이 `StageData`에서 `RunConfig`로 이동** — 스테이지에는 시작 위치만 남음 (`SpawnFromStage(stage, player, hp)`). `BattleBootstrap`의 단독 테스트 필드는 없애고 `BeginBattle(RunState)` 하나로
+- **시드**: `RunState.Seed` + 스테이지별 파생 시드(`StageSeed(BattleSalt / RewardSalt)`)로 행동 순서 동점과 보상 선택지를 정한다 → 시드와 스테이지 번호만 저장하면 같은 결과가 재현된다
+- **스테이지 페인팅 인스펙터**(`Editor/StageDataEditor`): §4.2. 드래그 한 번이 되돌리기(Ctrl+Z) 한 번. 크기를 줄이면 잘려 나갈 배치를 알려 주고 확인 후 잘라냄. 오류 칸은 빨간 테두리. **▶ 이 스테이지만 플레이** — Battle 씬을 열고 `RunConfig`의 플레이어·시작 덱으로 그 스테이지 한 판만 진행 (`SessionState` → `RunController`, 한 번만 적용). **씬 보드에 미리보기** — `BoardView` 미리보기로 깔기 (`BoardView.previewPlayer` 추가)
+- **검증**: `StageData.Validate`에 몬스터 팀 검사·몬스터 없음 추가, `RunConfig.Validate`, 전체 검사 `DataValidator` + 메뉴 `ProvidenceKnight/Validate All Data`(콘솔 항목을 누르면 해당 에셋으로 이동). 테스트 어셈블리가 `ProvidenceKnight.Editor`를 참조해 메뉴와 같은 검사(`ProjectDataValidator.Run`)를 돌린다
+- **세이브 구조**: `RunSaveData { version, stageIndex, hasPlayerHp, playerHp, maxEnergy, deckCardIds[], rngSeed }`, `RunState.ToSaveData` / `TryFromSaveData(data, RunConfig, GameDatabase)`, `RunSaveStore`(persistentDataPath JSON). 스테이지 사이에서만 저장하는 전제. 버튼은 아직 연결하지 않음
+- **확인**: 테스트 115개 → 133개 전부 통과. 인스펙터의 "이 스테이지만 플레이"로 Stage_01 한 판 시작 확인, 칠하기 규칙(플레이어 칸 보호, 장애물→몬스터 대체, 몬스터 교체, 지우개)과 칠한 스테이지로 전투 시작 확인
+- **남은 것**: 카드 UI 호버로 `Self` 카드 미리보기, 실제 창 포커스 상태에서의 연출 템포 확인, 이어하기 UI(세이브 연결), 카드 이름 필드 `cardName`과 유닛 `displayName` 이름 통일(선택)
