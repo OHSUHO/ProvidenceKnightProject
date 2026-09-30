@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e9a8cc90b69d8c4990e7831ab67e8f6, type: 3}
+  m_Name: Unit_Slime
+  m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.UnitData
+  displayName: Slime
+  team: 1
+  maxHp: 12
+  moveRange: 2
+  attackRange: 1
+  attackDamage: 4
+  sprite: {fileID: 0}
+  color: {r: 0.45, g: 0.9, b: 0.45, a: 1}

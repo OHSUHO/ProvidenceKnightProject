@@ -1,0 +1,61 @@
+# 줄바꿈: 저장소에는 LF 로 저장. Unity 가 쓰는 텍스트 에셋은 작업 폴더에서도 LF 로 유지
+# (core.autocrlf=true 인 PC 에서 CRLF 로 바뀌면, Unity 가 다시 저장할 때마다 모든 에셋이 변경된 것으로 보임)
+* text=auto
+
+# Unity YAML / 설정
+*.unity         text eol=lf
+*.prefab        text eol=lf
+*.asset         text eol=lf
+*.meta          text eol=lf
+*.mat           text eol=lf
+*.anim          text eol=lf
+*.controller    text eol=lf
+*.overrideController text eol=lf
+*.physicMaterial text eol=lf
+*.physicsMaterial2D text eol=lf
+*.playable      text eol=lf
+*.mask          text eol=lf
+*.brush         text eol=lf
+*.flare         text eol=lf
+*.fontsettings  text eol=lf
+*.guiskin       text eol=lf
+*.giparams      text eol=lf
+*.renderTexture text eol=lf
+*.spriteatlas   text eol=lf
+*.spriteatlasv2 text eol=lf
+*.terrainlayer  text eol=lf
+*.mixer         text eol=lf
+*.shadervariants text eol=lf
+*.preset        text eol=lf
+*.inputactions  text eol=lf
+*.asmdef        text eol=lf
+*.asmref        text eol=lf
+*.uss           text eol=lf
+*.uxml          text eol=lf
+
+# 코드 / 문서
+*.cs            text diff=csharp
+*.shader        text
+*.hlsl          text
+*.json          text
+*.md            text
+
+# 바이너리 (줄바꿈 변환 금지)
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.psd   binary
+*.aseprite binary
+*.tga   binary
+*.gif   binary
+*.ttf   binary
+*.otf   binary
+*.dll   binary
+*.so    binary
+*.a     binary
+*.wav   binary
+*.mp3   binary
+*.ogg   binary
+*.fbx   binary
+*.exr   binary
+*.hdr   binary

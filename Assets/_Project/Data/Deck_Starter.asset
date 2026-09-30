@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdb9e2063ee95784ba24690c542e22e6, type: 3}
+  m_Name: Deck_Starter
+  m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.DeckData
+  cards:
+  - {fileID: 11400000, guid: 2eb544fdcffe4b2499d9c790cab6fe1a, type: 2}
+  - {fileID: 11400000, guid: c1d0ae37d314a8a40a18756f784a6f5f, type: 2}
+  - {fileID: 11400000, guid: 8e0e8e3f99ce7c74d889d657c3e2ad42, type: 2}
+  - {fileID: 11400000, guid: 2f7f934786f4b1a43823cd70b5802a5c, type: 2}
+  - {fileID: 11400000, guid: 2eb544fdcffe4b2499d9c790cab6fe1a, type: 2}
+  - {fileID: 11400000, guid: c1d0ae37d314a8a40a18756f784a6f5f, type: 2}
+  - {fileID: 11400000, guid: 1e248b501f6387b40b2baa74fd36e143, type: 2}
+  - {fileID: 11400000, guid: 8e0e8e3f99ce7c74d889d657c3e2ad42, type: 2}
+  - {fileID: 11400000, guid: 9b335730566c7ad4885e4a468bc46a42, type: 2}
+  - {fileID: 11400000, guid: c1d0ae37d314a8a40a18756f784a6f5f, type: 2}

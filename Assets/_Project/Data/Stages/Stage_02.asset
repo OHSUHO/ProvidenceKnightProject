@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf4ea2d138fe35f4cbe43557050f4099, type: 3}
+  m_Name: Stage_02
+  m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.StageData
+  width: 9
+  height: 6
+  player: {fileID: 11400000, guid: 929ee40c51ed07844bc098dd16c81287, type: 2}
+  playerStart: {x: 4, y: 0}
+  blockedTiles:
+  - {x: 2, y: 2}
+  - {x: 2, y: 3}
+  - {x: 6, y: 2}
+  - {x: 6, y: 3}
+  - {x: 4, y: 3}
+  monsters:
+  - unit: {fileID: 11400000, guid: db25630ed329aa14abbe0bcd205f987d, type: 2}
+    position: {x: 0, y: 5}
+  - unit: {fileID: 11400000, guid: db25630ed329aa14abbe0bcd205f987d, type: 2}
+    position: {x: 8, y: 5}
+  - unit: {fileID: 11400000, guid: d11827de827788947ba0168353fed9b0, type: 2}
+    position: {x: 4, y: 5}
+  - unit: {fileID: 11400000, guid: d11827de827788947ba0168353fed9b0, type: 2}
+    position: {x: 3, y: 4}
+  - unit: {fileID: 11400000, guid: d11827de827788947ba0168353fed9b0, type: 2}
+    position: {x: 5, y: 4}
