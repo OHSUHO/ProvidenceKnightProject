@@ -91,6 +91,12 @@ namespace ProvidenceKnight.Data
                     if (string.IsNullOrWhiteSpace(unit.displayName)) issues.Add(new DataIssue(unit, "이름이 비어 있음"));
                     if (unit.team == Team.Enemy && unit.cards.Count == 0) issues.Add(new DataIssue(unit, "몬스터인데 카드가 없음"));
                     CheckCardList(unit, unit.cards, issues);
+                    if (unit.turnStartEffects != null)
+                    {
+                        if (unit.turnStartEffects.Any(e => e == null)) issues.Add(new DataIssue(unit, "비어 있는 턴 시작 효과 칸이 있음"));
+                        if (unit.turnStartEffects.Any(e => e != null && e.Kind != Battle.Effects.EffectKind.Other))
+                            issues.Add(new DataIssue(unit, "턴 시작 효과에는 공격·이동 효과를 쓸 수 없음 (대상 칸이 없음)"));
+                    }
                     break;
 
                 case StageData stage:

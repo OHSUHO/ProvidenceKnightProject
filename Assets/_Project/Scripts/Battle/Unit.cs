@@ -47,6 +47,9 @@ namespace ProvidenceKnight.Battle
         public int Block { get; private set; }
         public bool IsDead => Hp <= 0;
 
+        /// <summary>남은 공격 무효화 횟수. 공격 한 번을 통째로 막을 때마다 1 줄고, 턴이 지나도 유지된다.</summary>
+        public int Negate { get; private set; }
+
         public ActionOrderKey ActionOrder { get; internal set; }
 
         /// <summary>currentHp 를 주면 그 값으로 시작한다 (스테이지 간 체력 이어가기용). 생략하면 풀피.</summary>
@@ -63,12 +66,30 @@ namespace ProvidenceKnight.Battle
         /// <summary>시뮬레이션용 복사본 (같은 Id).</summary>
         public Unit Clone()
         {
-            var copy = new Unit(Id, Data, Position, Hp) { Block = Block, ActionOrder = ActionOrder };
+            var copy = new Unit(Id, Data, Position, Hp) { Block = Block, Negate = Negate, ActionOrder = ActionOrder };
             return copy;
         }
 
         public void AddBlock(int amount) => Block += Mathf.Max(0, amount);
         public void ResetBlock() => Block = 0;
+
+        /// <summary>무효화 횟수 추가 (maxStacks &gt; 0 이면 그 값까지만). 실제로 늘어난 양을 반환.</summary>
+        public int AddNegate(int amount, int maxStacks = 0)
+        {
+            int target = Negate + Mathf.Max(0, amount);
+            if (maxStacks > 0) target = Mathf.Min(target, Mathf.Max(Negate, maxStacks));
+            int gained = target - Negate;
+            Negate = target;
+            return gained;
+        }
+
+        /// <summary>무효화 1회 소모. 남은 게 없으면 false.</summary>
+        public bool ConsumeNegate()
+        {
+            if (Negate <= 0) return false;
+            Negate--;
+            return true;
+        }
 
         /// <summary>방어도로 먼저 흡수 후 남은 피해를 HP에 적용. 실제 HP 감소량을 반환.</summary>
         public int TakeDamage(int amount)

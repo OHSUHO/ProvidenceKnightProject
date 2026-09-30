@@ -17,6 +17,7 @@ namespace ProvidenceKnight.Battle
     public sealed record UnitAttacked(Unit Attacker, Unit Target, Vector2Int Cell, int Damage) : BattleEvent;   // 피해 적용 직전
     public sealed record UnitDamaged(Unit Unit, int HpLoss, int BlockLoss, int Hp, int Block) : BattleEvent;
     public sealed record BlockChanged(Unit Unit, int Delta, int Block) : BattleEvent;            // 획득(+) 또는 턴 시작 초기화(-)
+    public sealed record NegateChanged(Unit Unit, int Delta, int Negate) : BattleEvent;          // 획득(+) 또는 공격을 막아 소모(-)
     public sealed record UnitDied(Unit Unit) : BattleEvent;
     public sealed record CardPlayed(CardData Card, Vector2Int Target) : BattleEvent;
     public sealed record ResourcesChanged : BattleEvent;                                         // 에너지 / 손패 / 턴

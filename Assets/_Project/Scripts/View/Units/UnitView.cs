@@ -50,8 +50,15 @@ namespace ProvidenceKnight.View
         [SerializeField] Color incomingColor = new(1f, 0.45f, 0.4f);
         [SerializeField] Color killedColor = new(1f, 0.85f, 0.35f);
 
+        [Header("공격 무효화 (배지는 코드로 만든다 — 방어도 배지의 왼쪽 대칭 자리)")]
+        [SerializeField] Vector3 negateBadgeOffset = new(-0.38f, -0.06f, 0f);
+        [SerializeField] float negateBadgeFontSize = 1.2f;
+        [SerializeField] int negateBadgeSortingOrder = 17;
+        [SerializeField] Color negateColor = new(1f, 0.85f, 0.35f);
+
         public Unit Unit { get; private set; }
 
+        TextMeshPro _negateBadge;
         BoardView _board;
         FloatingTextPool _popups;
         Color _bodyColor;
@@ -67,6 +74,7 @@ namespace ProvidenceKnight.View
             ApplyData(unit.Data);
             hpBar.SetInstant(unit.Hp, unit.MaxHp);
             blockBadge.Set(unit.Block);
+            SetNegateBadge(unit.Negate);
             intentBadge.Hide();
         }
 
@@ -184,6 +192,36 @@ namespace ProvidenceKnight.View
             if (delta <= 0) return null;
             Popup(blockPopupOffset, $"+{delta}", blockColor);
             return NewSequence().Join(blockBadge.Punch());
+        }
+
+        /// <summary>공격 무효화 횟수 변화 (NegateChanged). 획득이면 "+N", 공격을 막아 소모되면 "막음!".</summary>
+        public Tween NegateChanged(int delta, int negate)
+        {
+            SetNegateBadge(negate);
+            if (delta == 0) return null;
+            Popup(blockPopupOffset, delta > 0 ? "무효화" : "막음!", negateColor);
+            if (_negateBadge == null) return null;
+            return NewSequence().Join(_negateBadge.transform.DOPunchScale(Vector3.one * 0.4f, 0.25f, 6));
+        }
+
+        void SetNegateBadge(int negate)
+        {
+            if (_negateBadge == null)
+            {
+                if (negate <= 0) return;
+                var go = new GameObject("NegateBadge");
+                go.transform.SetParent(transform, false);
+                go.transform.localPosition = negateBadgeOffset;
+                _negateBadge = go.AddComponent<TextMeshPro>();
+                _negateBadge.font = initial.font;
+                _negateBadge.fontSize = negateBadgeFontSize;
+                _negateBadge.alignment = TextAlignmentOptions.Center;
+                _negateBadge.color = negateColor;
+                _negateBadge.sortingOrder = negateBadgeSortingOrder;
+                _negateBadge.rectTransform.sizeDelta = new Vector2(1f, 0.5f);
+            }
+            _negateBadge.gameObject.SetActive(negate > 0);
+            if (negate > 0) _negateBadge.text = negate > 1 ? $"무효x{negate}" : "무효";
         }
 
         /// <summary>사망: 축소 + 회전 후 GameObject 파괴.</summary>

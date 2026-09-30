@@ -55,7 +55,7 @@ namespace ProvidenceKnight.Battle
 
         // ---------------- Turn ----------------
 
-        /// <summary>에너지 회복 + 플레이어 방어도 초기화 + 적 계획 갱신.</summary>
+        /// <summary>에너지 회복 + 플레이어 방어도 초기화 + 몬스터 턴 시작 효과 + 적 계획 갱신.</summary>
         public void StartPlayerTurn()
         {
             if (State.IsBattleOver) return;
@@ -64,6 +64,8 @@ namespace ProvidenceKnight.Battle
             State.Energy = State.MaxEnergy;
             if (State.Player != null) BattleRules.ResetBlock(State, State.Player);
             BattleRules.SetPhase(State, BattlePhase.PlayerTurn);
+            foreach (var enemy in State.EnemiesInActionOrder.ToList())
+                BattleRules.RunTurnStart(State, enemy);
             State.Emit(new ResourcesChanged());
             RefreshEnemyPlan();
         }

@@ -49,7 +49,42 @@ namespace ProvidenceKnight.Battle
             var victim = state.Grid.GetUnit(cell);
             if (!Targeting.IsEnemyOf(victim, attacker)) return;
             state.Emit(new UnitAttacked(attacker, victim, cell, damage));
+
+            // 무효화가 남아 있으면 이 공격은 피해 0 (방어도도 그대로)
+            if (damage > 0 && victim.ConsumeNegate())
+            {
+                state.Touch();
+                state.Emit(new NegateChanged(victim, -1, victim.Negate));
+                return;
+            }
             DealDamage(state, victim, damage);
+        }
+
+        public static void GainNegate(BattleState state, Unit unit, int amount, int maxStacks = 0)
+        {
+            int gained = unit.AddNegate(amount, maxStacks);
+            if (gained <= 0) return;
+            state.Touch();
+            state.Emit(new NegateChanged(unit, gained, unit.Negate));
+        }
+
+        /// <summary>
+        /// 몬스터의 턴 시작 효과. 방어도를 먼저 초기화한 뒤(몬스터도 플레이어처럼 한 턴 지나면 사라진다)
+        /// 정의된 효과를 위에서부터 차례로 시전자=자기 자신으로 실행한다. 행동 순서대로 한 마리씩.
+        /// </summary>
+        public static void RunTurnStart(BattleState state, Unit unit)
+        {
+            if (unit.IsDead) return;
+            ResetBlock(state, unit);
+
+            var effects = unit.Data.turnStartEffects;
+            if (effects == null) return;
+            var ctx = new Effects.EffectContext(state, unit, unit.Position, null);
+            foreach (var effect in effects)
+            {
+                if (state.IsBattleOver) break;
+                effect?.Resolve(ctx);
+            }
         }
 
         /// <summary>방어도로 먼저 흡수 → HP 감소 → 사망 시 격자에서 제거 → 승패 판정.</summary>
