@@ -240,7 +240,8 @@ namespace ProvidenceKnight.Input
             if (unit == null || unit.IsDead) { hud.HideTooltip(); return; }
 
             var d = unit.Data;
-            var hp = $"HP {unit.Hp}/{unit.MaxHp}" + (unit.Block > 0 ? $" · 방어 {unit.Block}" : "");
+            var hp = $"HP {unit.Hp}/{unit.MaxHp}" + (unit.Block > 0 ? $" · 방어 {unit.Block}" : "")
+                + (unit.Negate > 0 ? $" · 공격 무효화 {unit.Negate}회" : "");
             if (unit.Team != Team.Enemy)
             {
                 var p = State.EnemyPlan;
@@ -261,7 +262,10 @@ namespace ProvidenceKnight.Input
             var owned = d.cards.Count > 0
                 ? "\n보유 카드: " + string.Join(", ", d.cards.Where(c => c != null).Select(c => c.cardName))
                 : "";
-            hud.ShowTooltip(d.displayName, $"{hp}\n{order} ({priority}){next}{owned}");
+            var passive = d.turnStartEffects.Count > 0
+                ? "\n턴 시작: " + string.Join(", ", d.turnStartEffects.Where(e => e != null).Select(e => e.Describe(null)))
+                : "";
+            hud.ShowTooltip(d.displayName, $"{hp}\n{order} ({priority}){passive}{next}{owned}");
         }
     }
 }
