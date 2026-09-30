@@ -42,12 +42,13 @@ namespace ProvidenceKnight.Battle
         }
 
         /// <summary>
-        /// 스테이지 배치대로 유닛 생성. 뷰가 Events 를 구독한 뒤 호출한다.
+        /// 스테이지 배치대로 유닛 생성 (플레이어는 stage.playerStart 에). 뷰가 Events 를 구독한 뒤 호출한다.
         /// playerCurrentHp 를 주면 그 체력으로 플레이어가 시작한다 (이전 스테이지에서 이어받은 체력).
         /// </summary>
-        public void SpawnFromStage(StageData stage, int? playerCurrentHp = null)
+        public void SpawnFromStage(StageData stage, UnitData player, int? playerCurrentHp = null)
         {
-            State.Player = BattleRules.SpawnUnit(State, stage.player, stage.playerStart, playerCurrentHp);
+            if (player == null) throw new ArgumentNullException(nameof(player));
+            State.Player = BattleRules.SpawnUnit(State, player, stage.playerStart, playerCurrentHp);
             foreach (var m in stage.monsters)
                 BattleRules.SpawnUnit(State, m.unit, m.position);
         }

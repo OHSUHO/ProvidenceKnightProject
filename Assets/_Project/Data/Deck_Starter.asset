@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cdb9e2063ee95784ba24690c542e22e6, type: 3}
   m_Name: Deck_Starter
   m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.DeckData
+  id: deck_starter
   cards:
   - {fileID: 11400000, guid: 2eb544fdcffe4b2499d9c790cab6fe1a, type: 2}
   - {fileID: 11400000, guid: c1d0ae37d314a8a40a18756f784a6f5f, type: 2}

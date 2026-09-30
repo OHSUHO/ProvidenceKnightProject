@@ -10,7 +10,7 @@ namespace ProvidenceKnight.Data
 
     /// <summary>플레이어/몬스터 공통 유닛 정의.</summary>
     [CreateAssetMenu(fileName = "Unit_", menuName = "ProvidenceKnight/Unit Data")]
-    public class UnitData : ScriptableObject
+    public class UnitData : GameDataAsset
     {
         public string displayName = "Unit";
         public Team team = Team.Enemy;

@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51ff53d1dc4435d4a8a4eb3f42f94dc6, type: 3}
+  m_Name: GameDatabase
+  m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.GameDatabase
+  cards:
+  - {fileID: 11400000, guid: 1e248b501f6387b40b2baa74fd36e143, type: 2}
+  - {fileID: 11400000, guid: 9b335730566c7ad4885e4a468bc46a42, type: 2}
+  - {fileID: 11400000, guid: 8e0e8e3f99ce7c74d889d657c3e2ad42, type: 2}
+  - {fileID: 11400000, guid: 2eb544fdcffe4b2499d9c790cab6fe1a, type: 2}
+  - {fileID: 11400000, guid: c1d0ae37d314a8a40a18756f784a6f5f, type: 2}
+  - {fileID: 11400000, guid: 2f7f934786f4b1a43823cd70b5802a5c, type: 2}
+  - {fileID: 11400000, guid: 57c0fe93452bab74b860a1b5cfcdb69f, type: 2}
+  - {fileID: 11400000, guid: 88e8f28770483734ab9bada7f8b3858a, type: 2}
+  - {fileID: 11400000, guid: 0fb818f0be5cbf942b881b9e9fdbb92d, type: 2}
+  - {fileID: 11400000, guid: 76cd13ad5ded5bd4f8227cc861139294, type: 2}
+  units:
+  - {fileID: 11400000, guid: db25630ed329aa14abbe0bcd205f987d, type: 2}
+  - {fileID: 11400000, guid: 929ee40c51ed07844bc098dd16c81287, type: 2}
+  - {fileID: 11400000, guid: d11827de827788947ba0168353fed9b0, type: 2}
+  stages:
+  - {fileID: 11400000, guid: ff4de4456aa2441488c5e4d6c747c84b, type: 2}
+  - {fileID: 11400000, guid: ba57bd9e7267fd348b888c37cd0d77b5, type: 2}
+  - {fileID: 11400000, guid: dedbcd37a72701b49879f7c55d3b9aa3, type: 2}
+  decks:
+  - {fileID: 11400000, guid: 534d3d0ca1a210440929d538bdb1efa6, type: 2}
+  rewardPools:
+  - {fileID: 11400000, guid: 0295925d4edeae4488e77200a795107f, type: 2}

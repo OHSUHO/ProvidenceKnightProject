@@ -12,11 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e9a8cc90b69d8c4990e7831ab67e8f6, type: 3}
   m_Name: Unit_Goblin
   m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.UnitData
-  displayName: Goblin
+  id: unit_goblin
+  displayName: "\uACE0\uBE14\uB9B0"
   team: 1
   maxHp: 18
   moveRange: 3
+  attackShape: 2
   attackRange: 1
   attackDamage: 7
+  actionPriority: 0
+  viewPrefab: {fileID: 0}
   sprite: {fileID: 0}
   color: {r: 1, g: 0.45, b: 0.4, a: 1}

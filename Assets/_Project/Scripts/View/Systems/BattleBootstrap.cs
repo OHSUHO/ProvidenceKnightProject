@@ -1,24 +1,17 @@
 using System;
-using System.Collections.Generic;
 using ProvidenceKnight.Battle;
-using ProvidenceKnight.Data;
 using ProvidenceKnight.Input;
+using ProvidenceKnight.Run;
 using UnityEngine;
 
 namespace ProvidenceKnight.View
 {
     /// <summary>
     /// 전투 씬 조립. BeginBattle 마다 BattleController 를 만들고 씬의 시스템(연출·계획 표시·입력·HUD)에 연결한다.
-    /// RunController 가 스테이지마다 호출한다. stage/deck 을 지정하면 단독 테스트용으로 Start 에서 한 판을 시작한다.
+    /// RunController 가 스테이지마다 호출한다.
     /// </summary>
     public class BattleBootstrap : MonoBehaviour
     {
-        [Header("단독 테스트용 (RunController 가 있으면 비워 둠)")]
-        [SerializeField] StageData stage;
-        [SerializeField] DeckData deck;
-        [SerializeField, Min(1)] int handSize = 5;
-        [SerializeField, Min(0)] int maxEnergy = 3;
-
         [Header("Scene")]
         [SerializeField] BoardView board;
         [SerializeField] BattleEventPlayer eventPlayer;
@@ -39,26 +32,22 @@ namespace ProvidenceKnight.View
             if (eventPlayer != null) eventPlayer.BattleEnded -= OnBattleEnded;
         }
 
-        void Start()
+        /// <summary>런의 현재 스테이지로 전투 한 판을 시작한다.</summary>
+        public void BeginBattle(RunState run)
         {
-            if (stage != null && deck != null)
-                BeginBattle(stage, deck.cards, handSize, maxEnergy, null);
-        }
-
-        public void BeginBattle(StageData stageData, IReadOnlyList<CardData> deckCards, int handSizeParam, int maxEnergyParam, int? playerHp)
-        {
-            Battle = BattleController.Create(stageData, deckCards, handSizeParam, maxEnergyParam);
+            var stage = run.CurrentStage;
+            Battle = BattleController.Create(stage, run.Deck, run.HandSize, run.MaxEnergy, run.StageSeed(RunState.BattleSalt));
 
             eventPlayer.Unbind();              // 이전 판의 유닛·남은 연출 정리
             board.Build(State.Grid);
             eventPlayer.Bind(Battle);
             planPresenter.Bind(Battle);
             input.Bind(Battle);
-            hud.ResetForNewBattle(handSizeParam);
+            hud.ResetForNewBattle(run.HandSize);
 
-            Battle.SpawnFromStage(stageData, playerHp);
+            Battle.SpawnFromStage(stage, run.Player, run.PlayerHp);
             Battle.StartPlayerTurn();
-            Debug.Log($"[BattleBootstrap] '{stageData.name}' {stageData.width}x{stageData.height}, 몬스터 {stageData.monsters.Count}마리, 덱 {deckCards.Count}장, 시작체력={(playerHp?.ToString() ?? "풀피")}");
+            Debug.Log($"[BattleBootstrap] '{stage.name}' {stage.width}x{stage.height}, 몬스터 {stage.monsters.Count}마리, 덱 {run.Deck.Count}장, 시작체력={(run.PlayerHp?.ToString() ?? "풀피")}");
         }
 
         void OnBattleEnded(bool playerWon)

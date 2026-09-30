@@ -35,21 +35,22 @@ namespace ProvidenceKnight.Tests
             return d;
         }
 
-        static StageData MakeStage(int w, int h, Vector2Int playerStart, UnitData enemyDef, Vector2Int enemyPos, int playerHp = 20)
+        static StageData MakeStage(int w, int h, Vector2Int playerStart, UnitData enemyDef, Vector2Int enemyPos)
         {
             var stage = ScriptableObject.CreateInstance<StageData>();
             stage.width = w;
             stage.height = h;
-            stage.player = UnitDef(Team.Player, playerHp);
             stage.playerStart = playerStart;
             stage.monsters = new List<MonsterSpawn> { new() { unit = enemyDef, position = enemyPos } };
             return stage;
         }
 
-        static BattleController StartBattle(StageData stage, List<CardData> deck)
+        static UnitData Player(int hp = 20) => UnitDef(Team.Player, hp);
+
+        static BattleController StartBattle(StageData stage, List<CardData> deck, int playerHp = 20)
         {
             var battle = BattleController.Create(stage, deck, 5, 3);
-            battle.SpawnFromStage(stage);
+            battle.SpawnFromStage(stage, Player(playerHp));
             battle.StartPlayerTurn();
             return battle;
         }
@@ -124,10 +125,10 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void SpawnFromStage_WithHpOverride_StartsAtThatHp()
         {
-            var stage = MakeStage(5, 3, new Vector2Int(0, 1), UnitDef(Team.Enemy, 10), new Vector2Int(4, 1), playerHp: 30);
+            var stage = MakeStage(5, 3, new Vector2Int(0, 1), UnitDef(Team.Enemy, 10), new Vector2Int(4, 1));
             var battle = BattleController.Create(stage, new List<CardData>(), 5, 3);
 
-            battle.SpawnFromStage(stage, playerCurrentHp: 12);
+            battle.SpawnFromStage(stage, Player(30), playerCurrentHp: 12);
 
             Assert.AreEqual(12, battle.State.Player.Hp);
             Assert.AreEqual(30, battle.State.Player.MaxHp);
@@ -136,10 +137,10 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void SpawnFromStage_HpOverride_IsClampedToMax()
         {
-            var stage = MakeStage(5, 3, new Vector2Int(0, 1), UnitDef(Team.Enemy, 10), new Vector2Int(4, 1), playerHp: 20);
+            var stage = MakeStage(5, 3, new Vector2Int(0, 1), UnitDef(Team.Enemy, 10), new Vector2Int(4, 1));
             var battle = BattleController.Create(stage, new List<CardData>(), 5, 3);
 
-            battle.SpawnFromStage(stage, playerCurrentHp: 999);
+            battle.SpawnFromStage(stage, Player(20), playerCurrentHp: 999);
 
             Assert.AreEqual(20, battle.State.Player.Hp);
         }
@@ -149,12 +150,12 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void RunState_CaptureResult_CarriesHpAndMaxEnergyForward()
         {
-            var stage = MakeStage(5, 3, new Vector2Int(0, 1), UnitDef(Team.Enemy, 10), new Vector2Int(4, 1), playerHp: 30);
+            var stage = MakeStage(5, 3, new Vector2Int(0, 1), UnitDef(Team.Enemy, 10), new Vector2Int(4, 1));
             var deck = new List<CardData> { Slash() };
-            var battle = StartBattle(stage, deck);
+            var battle = StartBattle(stage, deck, 30);
             BattleRules.DealDamage(battle.State, battle.State.Player, 8);   // 임의로 체력을 깎아 다음 스테이지로 넘길 값 만들기
 
-            var run = new RunState(new List<StageData> { stage, stage }, deck, 5, 3);
+            var run = new RunState(new List<StageData> { stage, stage }, Player(), deck, 5, 3);
             Assert.IsNull(run.PlayerHp);   // 첫 스테이지는 풀피
 
             run.CaptureResult(battle.State);
@@ -167,7 +168,7 @@ namespace ProvidenceKnight.Tests
         {
             var stage = MakeStage(5, 3, new Vector2Int(0, 1), UnitDef(Team.Enemy, 10), new Vector2Int(4, 1));
             var starter = new List<CardData> { Named("A"), Named("B") };
-            var run = new RunState(new List<StageData> { stage }, starter, 5, 3);
+            var run = new RunState(new List<StageData> { stage }, Player(), starter, 5, 3);
             var reward = Named("Reward");
 
             run.AddReward(reward);
@@ -181,7 +182,7 @@ namespace ProvidenceKnight.Tests
         {
             var stage = MakeStage(5, 3, new Vector2Int(0, 1), UnitDef(Team.Enemy, 10), new Vector2Int(4, 1));
             var stages = new List<StageData> { stage, stage, stage };
-            var run = new RunState(stages, new List<CardData>(), 5, 3);
+            var run = new RunState(stages, Player(), new List<CardData>(), 5, 3);
 
             Assert.IsTrue(run.HasCurrentStage);
             Assert.IsFalse(run.IsLastStage);   // 인덱스 0, Count 3

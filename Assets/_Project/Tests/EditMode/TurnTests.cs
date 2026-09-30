@@ -92,12 +92,11 @@ namespace ProvidenceKnight.Tests
 
         // ---------------- BattleController turn flow ----------------
 
-        static StageData Stage(int width, int height, Vector2Int playerPos, int playerHp, params (UnitData def, Vector2Int pos)[] monsters)
+        static StageData Stage(int width, int height, Vector2Int playerPos, params (UnitData def, Vector2Int pos)[] monsters)
         {
             var stage = ScriptableObject.CreateInstance<StageData>();
             stage.width = width;
             stage.height = height;
-            stage.player = UnitDef(Team.Player, playerHp);
             stage.playerStart = playerPos;
             stage.monsters = monsters.Select(m => new MonsterSpawn { unit = m.def, position = m.pos }).ToList();
             return stage;
@@ -105,9 +104,9 @@ namespace ProvidenceKnight.Tests
 
         static BattleController MakeBattle(int width, int height, Vector2Int playerPos, UnitData enemyDef, Vector2Int enemyPos, int playerHp = 20)
         {
-            var stage = Stage(width, height, playerPos, playerHp, (enemyDef, enemyPos));
+            var stage = Stage(width, height, playerPos, (enemyDef, enemyPos));
             var battle = BattleController.Create(stage, new List<CardData>(), 5, 3);
-            battle.SpawnFromStage(stage);
+            battle.SpawnFromStage(stage, UnitDef(Team.Player, playerHp));
             battle.StartPlayerTurn();
             return battle;
         }
@@ -177,9 +176,9 @@ namespace ProvidenceKnight.Tests
         public void BattleEnded_Fires_OnPlayerDeath_AndStopsFurtherEnemies()
         {
             var strongDef = UnitDef(Team.Enemy, 10, moveRange: 0, attackRange: 1, attackDamage: 999);
-            var stage = Stage(3, 1, new Vector2Int(1, 0), 10, (strongDef, new Vector2Int(0, 0)), (strongDef, new Vector2Int(2, 0)));
+            var stage = Stage(3, 1, new Vector2Int(1, 0), (strongDef, new Vector2Int(0, 0)), (strongDef, new Vector2Int(2, 0)));
             var battle = BattleController.Create(stage, new List<CardData>(), 5, 3);
-            battle.SpawnFromStage(stage);
+            battle.SpawnFromStage(stage, UnitDef(Team.Player, 10));
             battle.StartPlayerTurn();
 
             battle.RunEnemyTurn();
@@ -198,9 +197,9 @@ namespace ProvidenceKnight.Tests
             var card = ScriptableObject.CreateInstance<CardData>();
             card.cardName = "Guard"; card.cost = 1; card.targeting = new TargetPattern(TargetShape.Self, 1, false);
             card.effects = new List<CardEffect> { new BlockEffect { amount = 5 } };
-            var stage = Stage(3, 1, new Vector2Int(0, 0), 20, (enemyDef, new Vector2Int(1, 0)));
+            var stage = Stage(3, 1, new Vector2Int(0, 0), (enemyDef, new Vector2Int(1, 0)));
             var battle = BattleController.Create(stage, new List<CardData> { card, card, card, card, card }, 5, 3);
-            battle.SpawnFromStage(stage);
+            battle.SpawnFromStage(stage, UnitDef(Team.Player, 20));
             battle.StartPlayerTurn();
 
             BattleRules.DealDamage(battle.State, battle.State.Enemies.Single(), 999);
@@ -216,9 +215,9 @@ namespace ProvidenceKnight.Tests
         public void Phase_FollowsTurnFlow()
         {
             var enemyDef = UnitDef(Team.Enemy, 10, moveRange: 1, attackDamage: 1);
-            var stage = Stage(6, 1, new Vector2Int(0, 0), 20, (enemyDef, new Vector2Int(5, 0)));
+            var stage = Stage(6, 1, new Vector2Int(0, 0), (enemyDef, new Vector2Int(5, 0)));
             var battle = BattleController.Create(stage, new List<CardData>(), 5, 3);
-            battle.SpawnFromStage(stage);
+            battle.SpawnFromStage(stage, UnitDef(Team.Player, 20));
             Assert.AreEqual(BattlePhase.NotStarted, battle.State.Phase);
 
             battle.StartPlayerTurn();
@@ -237,9 +236,9 @@ namespace ProvidenceKnight.Tests
             var card = ScriptableObject.CreateInstance<CardData>();
             card.targeting = new TargetPattern(TargetShape.Self, 1, false);
             card.effects = new List<CardEffect> { new BlockEffect { amount = 1 } };
-            var stage = Stage(3, 1, new Vector2Int(0, 0), 20, (UnitDef(Team.Enemy, 5), new Vector2Int(2, 0)));
+            var stage = Stage(3, 1, new Vector2Int(0, 0), (UnitDef(Team.Enemy, 5), new Vector2Int(2, 0)));
             var battle = BattleController.Create(stage, new List<CardData> { card }, 5, 3);
-            battle.SpawnFromStage(stage);   // 아직 StartPlayerTurn 전
+            battle.SpawnFromStage(stage, UnitDef(Team.Player, 20));   // 아직 StartPlayerTurn 전
 
             Assert.IsFalse(battle.CanSelectCard(0, out var reason));
             Assert.AreEqual("플레이어 턴이 아님", reason);
