@@ -3,6 +3,7 @@
     "rootNamespace": "ProvidenceKnight.Tests",
     "references": [
         "ProvidenceKnight",
+        "ProvidenceKnight.Editor",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
