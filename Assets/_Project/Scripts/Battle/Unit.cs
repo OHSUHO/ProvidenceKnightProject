@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ProvidenceKnight.Data;
 using UnityEngine;
 
@@ -52,6 +53,13 @@ namespace ProvidenceKnight.Battle
 
         public ActionOrderKey ActionOrder { get; internal set; }
 
+        StatusState[] _statuses = new StatusState[StatusRules.All.Length];
+
+        public StatusState GetStatus(StatusType type) => _statuses[(int)type];
+        public bool Has(StatusType type) => StatusRules.IsActive(type, _statuses[(int)type]);
+        public bool HasAnyStatus => StatusRules.All.Any(Has);
+        internal void SetStatus(StatusType type, int amount, int turns) => _statuses[(int)type] = new StatusState(amount, turns);
+
         /// <summary>currentHp 를 주면 그 값으로 시작한다 (스테이지 간 체력 이어가기용). 생략하면 풀피.</summary>
         public Unit(int id, UnitData data, Vector2Int position, int? currentHp = null)
         {
@@ -67,6 +75,7 @@ namespace ProvidenceKnight.Battle
         public Unit Clone()
         {
             var copy = new Unit(Id, Data, Position, Hp) { Block = Block, Negate = Negate, ActionOrder = ActionOrder };
+            copy._statuses = (StatusState[])_statuses.Clone();
             return copy;
         }
 
@@ -91,11 +100,11 @@ namespace ProvidenceKnight.Battle
             return true;
         }
 
-        /// <summary>방어도로 먼저 흡수 후 남은 피해를 HP에 적용. 실제 HP 감소량을 반환.</summary>
-        public int TakeDamage(int amount)
+        /// <summary>방어도로 먼저 흡수 후 남은 피해를 HP에 적용 (ignoreBlock 이면 방어도 무시). 실제 HP 감소량을 반환.</summary>
+        public int TakeDamage(int amount, bool ignoreBlock = false)
         {
             if (amount <= 0 || IsDead) return 0;
-            int absorbed = Mathf.Min(Block, amount);
+            int absorbed = ignoreBlock ? 0 : Mathf.Min(Block, amount);
             Block -= absorbed;
             int hpLoss = Mathf.Min(Hp, amount - absorbed);
             Hp -= hpLoss;

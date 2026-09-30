@@ -77,22 +77,105 @@ namespace ProvidenceKnight.Battle
             if (unit.IsDead) return;
             ResetBlock(state, unit);
 
-            var effects = unit.Data.turnStartEffects;
-            if (effects == null) return;
+            var entries = unit.Data.turnStartEffects;
+            if (entries == null) return;
             var ctx = new Effects.EffectContext(state, unit, unit.Position, null);
-            foreach (var effect in effects)
+            foreach (var entry in entries)
             {
                 if (state.IsBattleOver) break;
-                effect?.Resolve(ctx);
+                if (entry?.effect == null || !entry.IsActiveOnTurn(state.Turn)) continue;   // 턴 제한이 지난 효과는 건너뜀
+                entry.effect.Resolve(ctx);
+            }
+        }
+
+        // ---------------- 상태이상 ----------------
+
+        /// <summary>
+        /// 상태이상 부여. 같은 상태가 이미 있으면 겹친다: 독/출혈/화상은 강도가 더해지고(출혈·화상은 지속 턴은 긴 쪽),
+        /// 기절/빙결/암흑은 지속 턴이 긴 쪽으로. amount 는 피해형에서만, turns 는 독을 뺀 나머지에서만 쓴다.
+        /// </summary>
+        public static void ApplyStatus(BattleState state, Unit unit, StatusType type, int amount, int turns)
+        {
+            if (unit == null || unit.IsDead) return;
+            var cur = unit.GetStatus(type);
+            int newAmount = cur.Amount, newTurns = cur.Turns;
+
+            if (type == StatusType.Poison)
+            {
+                if (amount <= 0) return;
+                newAmount += amount;
+                newTurns = 0;
+            }
+            else if (StatusRules.IsDamageOverTime(type))
+            {
+                if (amount <= 0 || turns <= 0) return;
+                newAmount += amount;
+                newTurns = Mathf.Max(cur.Turns, turns);
+            }
+            else
+            {
+                if (turns <= 0) return;
+                newTurns = Mathf.Max(cur.Turns, turns);
+            }
+
+            SetStatus(state, unit, type, newAmount, newTurns, applied: true);
+        }
+
+        static void SetStatus(BattleState state, Unit unit, StatusType type, int amount, int turns, bool applied)
+        {
+            if (!StatusRules.IsActive(type, new StatusState(amount, turns))) { amount = 0; turns = 0; }
+            unit.SetStatus(type, amount, turns);
+            state.Touch();
+            state.Emit(new StatusChanged(unit, type, amount, turns, applied));
+        }
+
+        /// <summary>
+        /// 유닛 자기 턴 시작: 피해형 상태이상(독 → 출혈 → 화상 순)이 피해를 주고 한 턴씩 줄어든다.
+        /// 출혈·독은 방어도를 무시하고 화상은 방어도가 막아준다. 공격 무효화도 소용없다.
+        /// </summary>
+        public static void TickStartOfTurn(BattleState state, Unit unit)
+        {
+            foreach (var type in new[] { StatusType.Poison, StatusType.Bleed, StatusType.Burn })
+            {
+                if (state.IsBattleOver || unit.IsDead) return;
+                if (!unit.Has(type)) continue;
+
+                var s = unit.GetStatus(type);
+                DealDamage(state, unit, s.Amount, StatusRules.IgnoresBlock(type));
+                if (unit.IsDead) return;
+
+                if (type == StatusType.Poison) SetStatus(state, unit, type, s.Amount - 1, 0, applied: false);
+                else SetStatus(state, unit, type, s.Amount, s.Turns - 1, applied: false);
+            }
+        }
+
+        /// <summary>유닛 자기 턴 종료: 기절/빙결/암흑이 한 턴씩 줄어든다.</summary>
+        public static void EndOfTurn(BattleState state, Unit unit)
+        {
+            if (unit == null || unit.IsDead) return;
+            foreach (var type in new[] { StatusType.Stun, StatusType.Freeze, StatusType.Darkness })
+            {
+                if (!unit.Has(type)) continue;
+                SetStatus(state, unit, type, 0, unit.GetStatus(type).Turns - 1, applied: false);
+            }
+        }
+
+        /// <summary>적 턴이 시작될 때 몬스터 전원의 상태이상 피해 (행동 순서대로). 계획 시뮬레이션과 실제 실행이 같이 쓴다.</summary>
+        public static void RunEnemyTurnStart(BattleState state)
+        {
+            foreach (var enemy in state.EnemiesInActionOrder.ToList())
+            {
+                if (state.IsBattleOver) break;
+                TickStartOfTurn(state, enemy);
             }
         }
 
         /// <summary>방어도로 먼저 흡수 → HP 감소 → 사망 시 격자에서 제거 → 승패 판정.</summary>
-        public static void DealDamage(BattleState state, Unit victim, int amount)
+        public static void DealDamage(BattleState state, Unit victim, int amount, bool ignoreBlock = false)
         {
             if (victim.IsDead) return;
             int blockBefore = victim.Block;
-            int hpLoss = victim.TakeDamage(amount);
+            int hpLoss = victim.TakeDamage(amount, ignoreBlock);
             state.Touch();
             state.Emit(new UnitDamaged(victim, hpLoss, blockBefore - victim.Block, victim.Hp, victim.Block));
 

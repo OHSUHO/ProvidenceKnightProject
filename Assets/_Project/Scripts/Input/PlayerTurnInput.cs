@@ -242,6 +242,8 @@ namespace ProvidenceKnight.Input
             var d = unit.Data;
             var hp = $"HP {unit.Hp}/{unit.MaxHp}" + (unit.Block > 0 ? $" · 방어 {unit.Block}" : "")
                 + (unit.Negate > 0 ? $" · 공격 무효화 {unit.Negate}회" : "");
+            var statuses = string.Join(", ", StatusRules.All.Where(unit.Has).Select(t => StatusRules.Describe(t, unit.GetStatus(t))));
+            if (statuses.Length > 0) hp += "\n상태이상: " + statuses;
             if (unit.Team != Team.Enemy)
             {
                 var p = State.EnemyPlan;
@@ -262,8 +264,10 @@ namespace ProvidenceKnight.Input
             var owned = d.cards.Count > 0
                 ? "\n보유 카드: " + string.Join(", ", d.cards.Where(c => c != null).Select(c => c.cardName))
                 : "";
-            var passive = d.turnStartEffects.Count > 0
-                ? "\n턴 시작: " + string.Join(", ", d.turnStartEffects.Where(e => e != null).Select(e => e.Describe(null)))
+            // 턴 제한이 지나 사라진 효과는 보여주지 않는다
+            var activeEffects = d.turnStartEffects.Where(e => e?.effect != null && e.IsActiveOnTurn(State.Turn)).ToList();
+            var passive = activeEffects.Count > 0
+                ? "\n턴 시작: " + string.Join(", ", activeEffects.Select(e => e.Describe()))
                 : "";
             hud.ShowTooltip(d.displayName, $"{hp}\n{order} ({priority}){passive}{next}{owned}");
         }

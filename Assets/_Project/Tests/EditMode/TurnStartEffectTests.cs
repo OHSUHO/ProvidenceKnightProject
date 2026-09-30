@@ -26,7 +26,7 @@ namespace ProvidenceKnight.Tests
             var d = ScriptableObject.CreateInstance<UnitData>();
             d.team = team;
             d.maxHp = hp;
-            d.turnStartEffects = turnStart.ToList();
+            d.turnStartEffects = turnStart.Select(e => new TurnStartEntry(e)).ToList();
             if (team == Team.Enemy) d.cards = TestUnits.Cards(0, 3);   // 인접하면 3 피해
             return d;
         }

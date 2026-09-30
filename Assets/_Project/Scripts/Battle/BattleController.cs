@@ -62,10 +62,16 @@ namespace ProvidenceKnight.Battle
 
             State.Turn++;
             State.Energy = State.MaxEnergy;
-            if (State.Player != null) BattleRules.ResetBlock(State, State.Player);
             BattleRules.SetPhase(State, BattlePhase.PlayerTurn);
+
+            // 상태이상 피해는 방어도 초기화보다 먼저 (남은 방어도가 화상을 막아줄 수 있게)
+            if (State.Player != null) BattleRules.TickStartOfTurn(State, State.Player);
+            if (State.Player != null && !State.IsBattleOver) BattleRules.ResetBlock(State, State.Player);
             foreach (var enemy in State.EnemiesInActionOrder.ToList())
+            {
+                if (State.IsBattleOver) break;
                 BattleRules.RunTurnStart(State, enemy);
+            }
             State.Emit(new ResourcesChanged());
             RefreshEnemyPlan();
         }
@@ -74,6 +80,7 @@ namespace ProvidenceKnight.Battle
         public void EndPlayerTurn()
         {
             if (State.IsBattleOver) return;
+            BattleRules.EndOfTurn(State, State.Player);
             State.Cards.DiscardHandAndRefill();
             State.Emit(new ResourcesChanged());
         }
@@ -97,6 +104,7 @@ namespace ProvidenceKnight.Battle
             State.EnemyPlan = EnemyTurnPlan.Empty;
             State.Emit(new EnemyPlanChanged(State.EnemyPlan));
 
+            BattleRules.RunEnemyTurnStart(State);   // 계획도 이 피해를 먼저 반영해서 세워졌다 (EnemyPlanner.Plan)
             foreach (var action in plan.Actions)
             {
                 if (State.IsBattleOver) break;
@@ -134,6 +142,7 @@ namespace ProvidenceKnight.Battle
             if (handIndex < 0 || handIndex >= State.Cards.Hand.Count) { reason = "잘못된 카드"; return false; }
 
             var card = State.Cards.Hand[handIndex];
+            if (!StatusRules.CanUse(State.Player, card, out reason)) return false;
             if (card.cost > State.Energy) { reason = "에너지 부족"; return false; }
             if (GetValidTargets(handIndex).Count == 0) { reason = "대상 없음"; return false; }
             return true;

@@ -334,3 +334,24 @@ EventSystem                    (InputSystemUIInputModule)
 - **세이브 구조**: `RunSaveData { version, stageIndex, hasPlayerHp, playerHp, maxEnergy, deckCardIds[], rngSeed }`, `RunState.ToSaveData` / `TryFromSaveData(data, RunConfig, GameDatabase)`, `RunSaveStore`(persistentDataPath JSON). 스테이지 사이에서만 저장하는 전제. 버튼은 아직 연결하지 않음
 - **확인**: 테스트 115개 → 133개 전부 통과. 인스펙터의 "이 스테이지만 플레이"로 Stage_01 한 판 시작 확인, 칠하기 규칙(플레이어 칸 보호, 장애물→몬스터 대체, 몬스터 교체, 지우개)과 칠한 스테이지로 전투 시작 확인
 - **남은 것**: 카드 UI 호버로 `Self` 카드 미리보기, 실제 창 포커스 상태에서의 연출 템포 확인, 이어하기 UI(세이브 연결), 카드 이름 필드 `cardName`과 유닛 `displayName` 이름 통일(선택)
+
+## 상태이상과 턴 제한 턴 시작 효과 (feature/cardSpecialEffect)
+
+**상태이상** (`Battle/Status.cs`, `ApplyStatusEffect`, `Unit.GetStatus`). 지속 시간은 "그 유닛의 턴" 단위.
+
+| 상태 | 효과 | 지속 |
+|---|---|---|
+| 출혈 | 자기 턴 시작마다 강도만큼 피해, **방어도 무시** | 턴 수, 겹치면 강도 합 / 턴은 긴 쪽 |
+| 화상 | 위와 같지만 **방어도가 막아줌** | 위와 같음 |
+| 독 | 턴 시작마다 강도만큼 피해(방어도 무시) 후 강도 1 감소 | 강도가 0 이 될 때까지, 겹치면 강도 합 |
+| 기절 | 그 턴 카드 사용 불가 (몬스터는 의도 "기절") | 턴 수 (긴 쪽) |
+| 빙결 | 이동 효과가 있는 카드 사용 불가 | 턴 수 |
+| 암흑 | 직선/범위 모양에 사거리 2 이상인 카드 사용 불가 (`TargetPattern.IsRanged`) | 턴 수 |
+
+- 피해는 공격 무효화를 무시한다. 같은 카드의 피해가 무효화돼도 상태이상은 걸린다.
+- 플레이어: 턴 시작에 피해(방어도 초기화 **전**), 턴 종료에 기절/빙결/암흑 1 감소.
+- 몬스터: 적 턴이 시작될 때 전원 피해(`BattleRules.RunEnemyTurnStart`, 계획 시뮬레이션도 똑같이 먼저 실행 → 이 피해로 쓰러지면 계획에서 빠짐), 행동이 끝나면 제어 상태 1 감소.
+- 사용 가능 여부는 `StatusRules.CanUse` 한 곳 (플레이어 `CanSelectCard`, 몬스터 `EnemyPlanner` 공용).
+- `ApplyStatusEffect`: 기본은 대상 칸의 적에게(= Attack 종류), `onSelf` 면 시전자에게(턴 시작 효과에 사용 가능).
+
+**턴 시작 효과 턴 제한** (`UnitData.turnStartEffects` = `TurnStartEntry` 목록): 효과마다 `turns` (0 = 전투 내내, N = 전투 N턴째까지). `BattleState.Turn` 기준.

@@ -32,6 +32,9 @@ namespace ProvidenceKnight.Data
         /// <summary>같은 모양이지만 칸에 누가 있든 상관없이 전부 (위험 지역 표시용).</summary>
         public TargetPattern AnyOccupant() => new(shape, range, false);
 
+        /// <summary>원거리 공격 모양 (직선/범위, 사거리 2 이상). 암흑 상태가 막는 카드.</summary>
+        public bool IsRanged => shape is TargetShape.Line or TargetShape.Diamond && range >= 2;
+
         public string Describe() => shape switch
         {
             TargetShape.Self => "자신",
