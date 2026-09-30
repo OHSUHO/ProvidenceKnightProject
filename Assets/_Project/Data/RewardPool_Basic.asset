@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75000078ecaa44e41b5f0622b45abbe8, type: 3}
   m_Name: RewardPool_Basic
   m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.RewardPoolData
+  id: reward_pool_basic
   cards:
   - {fileID: 11400000, guid: 76cd13ad5ded5bd4f8227cc861139294, type: 2}
   - {fileID: 11400000, guid: 0fb818f0be5cbf942b881b9e9fdbb92d, type: 2}

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ProvidenceKnight.Data
 {
     [CreateAssetMenu(fileName = "Card_", menuName = "ProvidenceKnight/Card Data")]
-    public class CardData : ScriptableObject
+    public class CardData : GameDataAsset
     {
         public string cardName = "Card";
         [Min(0)] public int cost = 1;

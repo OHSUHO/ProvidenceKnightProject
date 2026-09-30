@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf4ea2d138fe35f4cbe43557050f4099, type: 3}
   m_Name: Stage_02
   m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.StageData
+  id: stage_02
   width: 9
   height: 6
   player: {fileID: 11400000, guid: 929ee40c51ed07844bc098dd16c81287, type: 2}

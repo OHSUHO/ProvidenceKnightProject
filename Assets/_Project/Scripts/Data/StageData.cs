@@ -13,7 +13,7 @@ namespace ProvidenceKnight.Data
 
     /// <summary>필드 크기와 몬스터 배치도. 좌표는 (0,0) = 왼쪽 아래.</summary>
     [CreateAssetMenu(fileName = "Stage_", menuName = "ProvidenceKnight/Stage Data")]
-    public class StageData : ScriptableObject
+    public class StageData : GameDataAsset
     {
         [Min(1)] public int width = 7;
         [Min(1)] public int height = 5;

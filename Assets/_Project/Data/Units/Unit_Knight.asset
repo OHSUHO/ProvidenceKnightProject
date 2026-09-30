@@ -12,11 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e9a8cc90b69d8c4990e7831ab67e8f6, type: 3}
   m_Name: Unit_Knight
   m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.UnitData
-  displayName: Knight
+  id: unit_knight
+  displayName: "\uAE30\uC0AC"
   team: 0
   maxHp: 30
   moveRange: 0
+  attackShape: 2
   attackRange: 1
   attackDamage: 0
+  actionPriority: 0
+  viewPrefab: {fileID: 0}
   sprite: {fileID: 0}
   color: {r: 0.35, g: 0.65, b: 1, a: 1}

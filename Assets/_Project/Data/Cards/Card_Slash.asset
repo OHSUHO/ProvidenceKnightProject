@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f76c35e17b2f1684da2a7d5f4b1a8af7, type: 3}
   m_Name: Card_Slash
   m_EditorClassIdentifier: ProvidenceKnight::ProvidenceKnight.Data.CardData
+  id: card_slash
   cardName: "\uBCA0\uAE30"
   cost: 1
   targeting:
