@@ -28,6 +28,10 @@ namespace ProvidenceKnight.Data
         [Tooltip("매 턴이 시작될 때(플레이어 턴 시작 시) 이 몬스터에게 자동으로 걸리는 효과. 예: 방어도 N, 공격 1회 무효화. 몬스터의 방어도는 이때 먼저 초기화된다. 공격·이동 효과는 쓸 수 없다. 효과마다 '턴 제한'을 걸 수 있다")]
         public List<TurnStartEntry> turnStartEffects = new();
 
+        [Header("처치 보상 (몬스터, 스테이지 승리 시 합산 지급)")]
+        [Min(0)] public int rewardExp;
+        [Min(0)] public int rewardGold;
+
         [Header("View")]
         [Tooltip("이 유닛 전용 프리팹 (UnitView 필요). 비어 있으면 BoardView 의 팀별 기본 프리팹에 sprite/color 만 적용")]
         public GameObject viewPrefab;

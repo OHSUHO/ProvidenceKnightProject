@@ -36,16 +36,16 @@ namespace ProvidenceKnight.View
         public void BeginBattle(RunState run)
         {
             var stage = run.CurrentStage;
-            Battle = BattleController.Create(stage, run.Deck, run.HandSize, run.MaxEnergy, run.StageSeed(RunState.BattleSalt));
+            Battle = BattleController.Create(stage, run.Deck, run.EffectiveHandSize, run.EffectiveMaxEnergy, run.StageSeed(RunState.BattleSalt));
 
             eventPlayer.Unbind();              // 이전 판의 유닛·남은 연출 정리
             board.Build(State.Grid);
             eventPlayer.Bind(Battle);
             planPresenter.Bind(Battle);
             input.Bind(Battle);
-            hud.ResetForNewBattle(run.HandSize);
+            hud.ResetForNewBattle(run.EffectiveHandSize);
 
-            Battle.SpawnFromStage(stage, run.Player, run.PlayerHp);
+            Battle.SpawnFromStage(stage, run.Player, run.PlayerHp, run.Bonus);
             Battle.StartPlayerTurn();
             Debug.Log($"[BattleBootstrap] '{stage.name}' {stage.width}x{stage.height}, 몬스터 {stage.monsters.Count}마리, 덱 {run.Deck.Count}장, 시작체력={(run.PlayerHp?.ToString() ?? "풀피")}");
         }

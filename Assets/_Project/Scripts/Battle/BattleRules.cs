@@ -12,9 +12,9 @@ namespace ProvidenceKnight.Battle
     /// </summary>
     public static class BattleRules
     {
-        public static Unit SpawnUnit(BattleState state, UnitData data, Vector2Int position, int? currentHp = null)
+        public static Unit SpawnUnit(BattleState state, UnitData data, Vector2Int position, int? currentHp = null, StatBlock bonus = default)
         {
-            var unit = new Unit(state.NextUnitId(), data, position, currentHp);
+            var unit = new Unit(state.NextUnitId(), data, position, currentHp, data.maxHp + bonus.maxHp) { AttackBonus = bonus.attack, DefenseBonus = bonus.defense };
             // 행동 순서 동점 처리용 난수는 스폰할 때 한 번만 뽑는다 → 이 전투가 끝날 때까지 순서 고정.
             unit.ActionOrder = new ActionOrderKey(data.actionPriority, state.Rng.Next(), unit.Id);
             state.Grid.PlaceUnit(unit, position);
@@ -48,6 +48,7 @@ namespace ProvidenceKnight.Battle
         {
             var victim = state.Grid.GetUnit(cell);
             if (!Targeting.IsEnemyOf(victim, attacker)) return;
+            if (damage > 0) damage += attacker.AttackBonus;
             state.Emit(new UnitAttacked(attacker, victim, cell, damage));
 
             // 무효화가 남아 있으면 이 공격은 피해 0 (방어도도 그대로)
@@ -190,6 +191,7 @@ namespace ProvidenceKnight.Battle
         public static void GainBlock(BattleState state, Unit unit, int amount)
         {
             if (amount <= 0) return;
+            amount += unit.DefenseBonus;
             unit.AddBlock(amount);
             state.Touch();
             state.Emit(new BlockChanged(unit, amount, unit.Block));

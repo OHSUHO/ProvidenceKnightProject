@@ -19,7 +19,7 @@ namespace ProvidenceKnight.EditorTools
         static void RebuildMenu()
         {
             var db = Rebuild();
-            Debug.Log($"[GameDatabase] 다시 모음: 카드 {db.cards.Count}, 유닛 {db.units.Count}, 스테이지 {db.stages.Count}, 덱 {db.decks.Count}, 보상 풀 {db.rewardPools.Count}", db);
+            Debug.Log($"[GameDatabase] 다시 모음: 카드 {db.cards.Count}, 유닛 {db.units.Count}, 스테이지 {db.stages.Count}, 덱 {db.decks.Count}, 보상 풀 {db.rewardPools.Count}, 장비 {db.equipment.Count}", db);
             EditorGUIUtility.PingObject(db);
         }
 
@@ -36,7 +36,7 @@ namespace ProvidenceKnight.EditorTools
             var all = GameDataIdAssigner.AllAssets()
                 .OrderBy(AssetDatabase.GetAssetPath, System.StringComparer.Ordinal)
                 .ToList();
-            bool changed = Fill(db.cards, all) | Fill(db.units, all) | Fill(db.stages, all) | Fill(db.decks, all) | Fill(db.rewardPools, all);
+            bool changed = Fill(db.cards, all) | Fill(db.units, all) | Fill(db.stages, all) | Fill(db.decks, all) | Fill(db.rewardPools, all) | Fill(db.equipment, all);
             if (changed)
             {
                 db.ClearCache();

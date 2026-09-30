@@ -46,6 +46,10 @@ namespace ProvidenceKnight.Battle
         public int MaxHp { get; }
         public int Hp { get; private set; }
         public int Block { get; private set; }
+
+        /// <summary>장비 스탯: 이 유닛이 쓰는 공격 피해 +N / 얻는 방어도 +N (몬스터는 0).</summary>
+        public int AttackBonus { get; internal set; }
+        public int DefenseBonus { get; internal set; }
         public bool IsDead => Hp <= 0;
 
         /// <summary>남은 공격 무효화 횟수. 공격 한 번을 통째로 막을 때마다 1 줄고, 턴이 지나도 유지된다.</summary>
@@ -61,12 +65,12 @@ namespace ProvidenceKnight.Battle
         internal void SetStatus(StatusType type, int amount, int turns) => _statuses[(int)type] = new StatusState(amount, turns);
 
         /// <summary>currentHp 를 주면 그 값으로 시작한다 (스테이지 간 체력 이어가기용). 생략하면 풀피.</summary>
-        public Unit(int id, UnitData data, Vector2Int position, int? currentHp = null)
+        public Unit(int id, UnitData data, Vector2Int position, int? currentHp = null, int? maxHp = null)
         {
             Id = id;
             Data = data;
             Position = position;
-            MaxHp = data.maxHp;
+            MaxHp = maxHp ?? data.maxHp;
             Hp = currentHp.HasValue ? Mathf.Clamp(currentHp.Value, 0, MaxHp) : MaxHp;
             ActionOrder = new ActionOrderKey(data.actionPriority, 0, id);
         }
@@ -74,7 +78,7 @@ namespace ProvidenceKnight.Battle
         /// <summary>시뮬레이션용 복사본 (같은 Id).</summary>
         public Unit Clone()
         {
-            var copy = new Unit(Id, Data, Position, Hp) { Block = Block, Negate = Negate, ActionOrder = ActionOrder };
+            var copy = new Unit(Id, Data, Position, Hp, MaxHp) { Block = Block, Negate = Negate, ActionOrder = ActionOrder, AttackBonus = AttackBonus, DefenseBonus = DefenseBonus };
             copy._statuses = (StatusState[])_statuses.Clone();
             return copy;
         }

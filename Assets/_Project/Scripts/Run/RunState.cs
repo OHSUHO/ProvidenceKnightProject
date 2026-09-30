@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProvidenceKnight.Battle;
 using ProvidenceKnight.Data;
+using UnityEngine;
 
 namespace ProvidenceKnight.Run
 {
@@ -18,6 +19,12 @@ namespace ProvidenceKnight.Run
         public List<CardData> Deck { get; }
         public int HandSize { get; }
         public int MaxEnergy { get; private set; }
+
+        /// <summary>착용 장비가 주는 스탯 (프로필에서 받아 온다). MaxEnergy 는 장비 보너스를 뺀 기본값만 담는다.</summary>
+        public StatBlock Bonus { get; set; }
+
+        public int EffectiveHandSize => Mathf.Max(1, HandSize + Bonus.handSize);
+        public int EffectiveMaxEnergy => Mathf.Max(0, MaxEnergy + Bonus.maxEnergy);
 
         /// <summary>런 난수 시드. 스테이지마다 여기서 파생한 시드를 쓰므로, 시드와 스테이지 번호만 저장하면 같은 결과가 재현된다.</summary>
         public int Seed { get; }
@@ -55,7 +62,7 @@ namespace ProvidenceKnight.Run
         public void CaptureResult(BattleState battle)
         {
             PlayerHp = battle.Player.Hp;
-            MaxEnergy = battle.MaxEnergy;
+            MaxEnergy = battle.MaxEnergy - Bonus.maxEnergy;
         }
 
         /// <summary>보상으로 고른 카드를 덱 맨 뒤에 추가한다.</summary>
