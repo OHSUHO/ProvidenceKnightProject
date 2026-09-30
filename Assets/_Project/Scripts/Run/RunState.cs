@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using ProvidenceKnight.Battle;
 using ProvidenceKnight.Data;
 
@@ -63,5 +65,42 @@ namespace ProvidenceKnight.Run
         }
 
         public void AdvanceStage() => StageIndex++;
+
+        // ---------------- 세이브 ----------------
+
+        public RunSaveData ToSaveData() => new()
+        {
+            stageIndex = StageIndex,
+            hasPlayerHp = PlayerHp.HasValue,
+            playerHp = PlayerHp ?? 0,
+            maxEnergy = MaxEnergy,
+            deckCardIds = Deck.Select(c => c.Id).ToArray(),
+            rngSeed = Seed,
+        };
+
+        /// <summary>저장 데이터 + 설정(스테이지 순서·플레이어·손패 수) + 데이터베이스(카드 id → 에셋)로 런을 되살린다.</summary>
+        public static bool TryFromSaveData(RunSaveData data, RunConfig config, GameDatabase db, out RunState run, out string error)
+        {
+            run = null;
+            error = null;
+            if (data == null) { error = "세이브 데이터가 없음"; return false; }
+            if (data.version != RunSaveData.CurrentVersion) { error = $"세이브 버전 {data.version} 을 읽을 수 없음 (현재 {RunSaveData.CurrentVersion})"; return false; }
+            if (data.stageIndex < 0 || data.stageIndex >= config.stages.Count) { error = $"스테이지 번호 {data.stageIndex} 가 RunConfig 범위 밖"; return false; }
+
+            var deck = new List<CardData>();
+            foreach (var id in data.deckCardIds ?? Array.Empty<string>())
+            {
+                var card = db.Get<CardData>(id);
+                if (card == null) { error = $"카드 id '{id}' 를 데이터베이스에서 찾을 수 없음"; return false; }
+                deck.Add(card);
+            }
+
+            run = new RunState(config.stages, config.player, deck, config.handSize, data.maxEnergy, data.rngSeed)
+            {
+                StageIndex = data.stageIndex,
+                PlayerHp = data.hasPlayerHp ? data.playerHp : null,
+            };
+            return true;
+        }
     }
 }
