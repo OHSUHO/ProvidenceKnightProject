@@ -108,3 +108,5 @@ InitTestScene*.unity*
 # Machine-specific tooling (absolute paths / auto-installed Claude Code skills)
 /.mcp.json
 /.claude/
+/.codex/
+/.agents/
