@@ -106,10 +106,10 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void Validator_FindsDuplicateIds_AndEmptyIds()
         {
-            var a = Card("card_a", new BlockEffect { amount = 1 });
-            var b = Card("card_b", new BlockEffect { amount = 1 });
+            var a = Card("card_a", new BlockBuff { amount = 1 });
+            var b = Card("card_b", new BlockBuff { amount = 1 });
             b.EditorSetId("card_a");
-            var c = Card("card_c", new BlockEffect { amount = 1 });
+            var c = Card("card_c", new BlockBuff { amount = 1 });
             c.EditorSetId("");
 
             var issues = DataValidator.Validate(Db(a, b, c), null);
@@ -148,8 +148,8 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void Validator_FindsAssetMissingFromDatabase()
         {
-            var inDb = Card("card_in", new BlockEffect { amount = 1 });
-            var outside = Card("card_out", new BlockEffect { amount = 1 });
+            var inDb = Card("card_in", new BlockBuff { amount = 1 });
+            var outside = Card("card_out", new BlockBuff { amount = 1 });
 
             var issues = DataValidator.Validate(Db(inDb), null, new GameDataAsset[] { inDb, outside });
 

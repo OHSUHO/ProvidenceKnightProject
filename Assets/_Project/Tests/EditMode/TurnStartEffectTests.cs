@@ -49,7 +49,7 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void Block_IsGrantedAtTurnStart_AndAbsorbsPlayerAttack()
         {
-            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new BlockEffect { amount = 4 }));
+            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new BlockBuff { amount = 4 }));
             var enemy = battle.State.Enemies.Single();
             Assert.AreEqual(4, enemy.Block);
 
@@ -61,7 +61,7 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void Block_DoesNotAccumulateAcrossTurns()
         {
-            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new BlockEffect { amount = 4 }));
+            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new BlockBuff { amount = 4 }));
             var enemy = battle.State.Enemies.Single();
 
             battle.EndTurn();
@@ -73,7 +73,7 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void Negate_BlocksExactlyOneAttack()
         {
-            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new NegateAttackEffect()));
+            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new NegateAttackBuff()));
             var enemy = battle.State.Enemies.Single();
             Assert.AreEqual(1, enemy.Negate);
 
@@ -89,7 +89,7 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void Negate_LeavesBlockUntouched()
         {
-            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new BlockEffect { amount = 4 }, new NegateAttackEffect()));
+            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new BlockBuff { amount = 4 }, new NegateAttackBuff()));
             var enemy = battle.State.Enemies.Single();
 
             battle.TryPlayCard(0, enemy.Position, out _);
@@ -101,7 +101,7 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void Negate_StaysAcrossTurns_ButRespectsMaxStacks()
         {
-            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new NegateAttackEffect { amount = 1, maxStacks = 2 }));
+            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new NegateAttackBuff { amount = 1, maxStacks = 2 }));
             var enemy = battle.State.Enemies.Single();
             Assert.AreEqual(1, enemy.Negate);
 
@@ -114,7 +114,7 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void Negate_UnlimitedWhenMaxStacksIsZero()
         {
-            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new NegateAttackEffect { amount = 1, maxStacks = 0 }));
+            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new NegateAttackBuff { amount = 1, maxStacks = 0 }));
             var enemy = battle.State.Enemies.Single();
             battle.EndTurn();
             battle.EndTurn();
@@ -124,7 +124,7 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void Preview_ShowsNegatedAttack_AsNoDamage()
         {
-            var battle = MakeBattle(UnitDef(Team.Enemy, 5, new NegateAttackEffect()));
+            var battle = MakeBattle(UnitDef(Team.Enemy, 5, new NegateAttackBuff()));
             var enemy = battle.State.Enemies.Single();
 
             var preview = battle.PreviewCard(0, enemy.Position);
@@ -137,7 +137,7 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void EffectsRunBeforeEnemyPlan_AndTurnStartEventsAreEmitted()
         {
-            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new BlockEffect { amount = 2 }, new NegateAttackEffect()));
+            var battle = MakeBattle(UnitDef(Team.Enemy, 10, new BlockBuff { amount = 2 }, new NegateAttackBuff()));
             var kinds = battle.Events.History.Select(e => e.GetType()).ToList();
 
             int block = kinds.LastIndexOf(typeof(BlockChanged));

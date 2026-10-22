@@ -242,8 +242,8 @@ namespace ProvidenceKnight.Input
             var d = unit.Data;
             var hp = $"HP {unit.Hp}/{unit.MaxHp}" + (unit.Block > 0 ? $" · 방어 {unit.Block}" : "")
                 + (unit.Negate > 0 ? $" · 공격 무효화 {unit.Negate}회" : "");
-            var statuses = string.Join(", ", StatusRules.All.Where(unit.Has).Select(t => StatusRules.Describe(t, unit.GetStatus(t))));
-            if (statuses.Length > 0) hp += "\n상태이상: " + statuses;
+            var debuffs = string.Join(", ", DebuffRules.All.Where(unit.Has).Select(t => DebuffRules.Describe(t, unit.GetDebuff(t))));
+            if (debuffs.Length > 0) hp += "\n상태이상: " + debuffs;
             if (unit.Team != Team.Enemy)
             {
                 var p = State.EnemyPlan;

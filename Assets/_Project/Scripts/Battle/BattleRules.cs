@@ -95,19 +95,19 @@ namespace ProvidenceKnight.Battle
         /// 상태이상 부여. 같은 상태가 이미 있으면 겹친다: 독/출혈/화상은 강도가 더해지고(출혈·화상은 지속 턴은 긴 쪽),
         /// 기절/빙결/암흑은 지속 턴이 긴 쪽으로. amount 는 피해형에서만, turns 는 독을 뺀 나머지에서만 쓴다.
         /// </summary>
-        public static void ApplyStatus(BattleState state, Unit unit, StatusType type, int amount, int turns)
+        public static void ApplyDebuff(BattleState state, Unit unit, DebuffType type, int amount, int turns)
         {
             if (unit == null || unit.IsDead) return;
-            var cur = unit.GetStatus(type);
+            var cur = unit.GetDebuff(type);
             int newAmount = cur.Amount, newTurns = cur.Turns;
 
-            if (type == StatusType.Poison)
+            if (type == DebuffType.Poison)
             {
                 if (amount <= 0) return;
                 newAmount += amount;
                 newTurns = 0;
             }
-            else if (StatusRules.IsDamageOverTime(type))
+            else if (DebuffRules.IsDamageOverTime(type))
             {
                 if (amount <= 0 || turns <= 0) return;
                 newAmount += amount;
@@ -119,15 +119,15 @@ namespace ProvidenceKnight.Battle
                 newTurns = Mathf.Max(cur.Turns, turns);
             }
 
-            SetStatus(state, unit, type, newAmount, newTurns, applied: true);
+            SetDebuff(state, unit, type, newAmount, newTurns, applied: true);
         }
 
-        static void SetStatus(BattleState state, Unit unit, StatusType type, int amount, int turns, bool applied)
+        static void SetDebuff(BattleState state, Unit unit, DebuffType type, int amount, int turns, bool applied)
         {
-            if (!StatusRules.IsActive(type, new StatusState(amount, turns))) { amount = 0; turns = 0; }
-            unit.SetStatus(type, amount, turns);
+            if (!DebuffRules.IsActive(type, new DebuffState(amount, turns))) { amount = 0; turns = 0; }
+            unit.SetDebuff(type, amount, turns);
             state.Touch();
-            state.Emit(new StatusChanged(unit, type, amount, turns, applied));
+            state.Emit(new DebuffChanged(unit, type, amount, turns, applied));
         }
 
         /// <summary>
@@ -136,17 +136,17 @@ namespace ProvidenceKnight.Battle
         /// </summary>
         public static void TickStartOfTurn(BattleState state, Unit unit)
         {
-            foreach (var type in new[] { StatusType.Poison, StatusType.Bleed, StatusType.Burn })
+            foreach (var type in new[] { DebuffType.Poison, DebuffType.Bleed, DebuffType.Burn })
             {
                 if (state.IsBattleOver || unit.IsDead) return;
                 if (!unit.Has(type)) continue;
 
-                var s = unit.GetStatus(type);
-                DealDamage(state, unit, s.Amount, StatusRules.IgnoresBlock(type));
+                var s = unit.GetDebuff(type);
+                DealDamage(state, unit, s.Amount, DebuffRules.IgnoresBlock(type));
                 if (unit.IsDead) return;
 
-                if (type == StatusType.Poison) SetStatus(state, unit, type, s.Amount - 1, 0, applied: false);
-                else SetStatus(state, unit, type, s.Amount, s.Turns - 1, applied: false);
+                if (type == DebuffType.Poison) SetDebuff(state, unit, type, s.Amount - 1, 0, applied: false);
+                else SetDebuff(state, unit, type, s.Amount, s.Turns - 1, applied: false);
             }
         }
 
@@ -154,10 +154,10 @@ namespace ProvidenceKnight.Battle
         public static void EndOfTurn(BattleState state, Unit unit)
         {
             if (unit == null || unit.IsDead) return;
-            foreach (var type in new[] { StatusType.Stun, StatusType.Freeze, StatusType.Darkness })
+            foreach (var type in new[] { DebuffType.Stun, DebuffType.Freeze, DebuffType.Darkness })
             {
                 if (!unit.Has(type)) continue;
-                SetStatus(state, unit, type, 0, unit.GetStatus(type).Turns - 1, applied: false);
+                SetDebuff(state, unit, type, 0, unit.GetDebuff(type).Turns - 1, applied: false);
             }
         }
 

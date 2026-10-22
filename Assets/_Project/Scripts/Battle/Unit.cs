@@ -57,12 +57,12 @@ namespace ProvidenceKnight.Battle
 
         public ActionOrderKey ActionOrder { get; internal set; }
 
-        StatusState[] _statuses = new StatusState[StatusRules.All.Length];
+        DebuffState[] _debuffs = new DebuffState[DebuffRules.All.Length];
 
-        public StatusState GetStatus(StatusType type) => _statuses[(int)type];
-        public bool Has(StatusType type) => StatusRules.IsActive(type, _statuses[(int)type]);
-        public bool HasAnyStatus => StatusRules.All.Any(Has);
-        internal void SetStatus(StatusType type, int amount, int turns) => _statuses[(int)type] = new StatusState(amount, turns);
+        public DebuffState GetDebuff(DebuffType type) => _debuffs[(int)type];
+        public bool Has(DebuffType type) => DebuffRules.IsActive(type, _debuffs[(int)type]);
+        public bool HasAnyDebuff => DebuffRules.All.Any(Has);
+        internal void SetDebuff(DebuffType type, int amount, int turns) => _debuffs[(int)type] = new DebuffState(amount, turns);
 
         /// <summary>currentHp 를 주면 그 값으로 시작한다 (스테이지 간 체력 이어가기용). 생략하면 풀피.</summary>
         public Unit(int id, UnitData data, Vector2Int position, int? currentHp = null, int? maxHp = null)
@@ -79,7 +79,7 @@ namespace ProvidenceKnight.Battle
         public Unit Clone()
         {
             var copy = new Unit(Id, Data, Position, Hp, MaxHp) { Block = Block, Negate = Negate, ActionOrder = ActionOrder, AttackBonus = AttackBonus, DefenseBonus = DefenseBonus };
-            copy._statuses = (StatusState[])_statuses.Clone();
+            copy._debuffs = (DebuffState[])_debuffs.Clone();
             return copy;
         }
 

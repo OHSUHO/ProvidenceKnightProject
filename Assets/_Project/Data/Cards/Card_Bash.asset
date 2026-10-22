@@ -33,6 +33,6 @@ MonoBehaviour:
       data:
         amount: 5
     - rid: 2685641398889480268
-      type: {class: BlockEffect, ns: ProvidenceKnight.Battle.Effects, asm: ProvidenceKnight}
+      type: {class: BlockBuff, ns: ProvidenceKnight.Battle.Effects, asm: ProvidenceKnight}
       data:
         amount: 5

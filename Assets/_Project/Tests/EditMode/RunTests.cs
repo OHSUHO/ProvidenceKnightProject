@@ -24,7 +24,7 @@ namespace ProvidenceKnight.Tests
 
         static CardData Named(string n) => Card(n, 1, TargetShape.Self, false, false);
         static CardData EnergyPotion(int amount = 1) =>
-            Card("기력 각성", 2, TargetShape.Self, false, true, new GainMaxEnergyEffect { amount = amount });
+            Card("기력 각성", 2, TargetShape.Self, false, true, new GainMaxEnergyBuff { amount = amount });
         static CardData Slash(int dmg = 6) => Card("베기", 1, TargetShape.Adjacent, true, false, new DamageEffect { amount = dmg });
 
         static UnitData UnitDef(Team team, int hp)

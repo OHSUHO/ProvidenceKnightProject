@@ -65,7 +65,7 @@ namespace ProvidenceKnight.View
         public Unit Unit { get; private set; }
 
         TextMeshPro _statusBadge;
-        readonly StatusState[] _statuses = new StatusState[StatusRules.All.Length];   // 이벤트 시점 값 (연출이 늦어도 화면이 정확하도록)
+        readonly DebuffState[] _debuffs = new DebuffState[DebuffRules.All.Length];   // 이벤트 시점 값 (연출이 늦어도 화면이 정확하도록)
 
         TextMeshPro _negateBadge;
         BoardView _board;
@@ -84,8 +84,8 @@ namespace ProvidenceKnight.View
             hpBar.SetInstant(unit.Hp, unit.MaxHp);
             blockBadge.Set(unit.Block);
             SetNegateBadge(unit.Negate);
-            foreach (var type in StatusRules.All) _statuses[(int)type] = unit.GetStatus(type);
-            RefreshStatusBadge();
+            foreach (var type in DebuffRules.All) _debuffs[(int)type] = unit.GetDebuff(type);
+            RefreshDebuffBadge();
             intentBadge.Hide();
         }
 
@@ -218,45 +218,45 @@ namespace ProvidenceKnight.View
             return NewSequence().Join(_negateBadge.transform.DOPunchScale(Vector3.one * 0.4f, 0.25f, 6));
         }
 
-        /// <summary>상태이상 변화 (StatusChanged). 새로 걸렸으면 이름 팝업, 틱·만료는 조용히 줄만 갱신.</summary>
-        public Tween StatusChanged(StatusType type, int amount, int turns, bool applied)
+        /// <summary>상태이상 변화 (DebuffChanged). 새로 걸렸으면 이름 팝업, 틱·만료는 조용히 줄만 갱신.</summary>
+        public Tween DebuffChanged(DebuffType type, int amount, int turns, bool applied)
         {
-            _statuses[(int)type] = new StatusState(amount, turns);
-            RefreshStatusBadge();
+            _debuffs[(int)type] = new DebuffState(amount, turns);
+            RefreshDebuffBadge();
             if (!applied) return null;
-            Popup(statusPopupOffset, StatusRules.Name(type), StatusColor(type));
+            Popup(statusPopupOffset, DebuffRules.Name(type), DebuffColor(type));
             return _statusBadge == null ? null : NewSequence().Join(_statusBadge.transform.DOPunchScale(Vector3.one * 0.3f, 0.25f, 6));
         }
 
-        static Color StatusColor(StatusType type) => type switch
+        static Color DebuffColor(DebuffType type) => type switch
         {
-            StatusType.Bleed => new Color(0.85f, 0.2f, 0.25f),
-            StatusType.Burn => new Color(1f, 0.6f, 0.2f),
-            StatusType.Poison => new Color(0.55f, 0.85f, 0.3f),
-            StatusType.Stun => new Color(1f, 0.92f, 0.35f),
-            StatusType.Freeze => new Color(0.55f, 0.9f, 1f),
-            StatusType.Darkness => new Color(0.7f, 0.5f, 0.95f),
+            DebuffType.Bleed => new Color(0.85f, 0.2f, 0.25f),
+            DebuffType.Burn => new Color(1f, 0.6f, 0.2f),
+            DebuffType.Poison => new Color(0.55f, 0.85f, 0.3f),
+            DebuffType.Stun => new Color(1f, 0.92f, 0.35f),
+            DebuffType.Freeze => new Color(0.55f, 0.9f, 1f),
+            DebuffType.Darkness => new Color(0.7f, 0.5f, 0.95f),
             _ => Color.white
         };
 
-        void RefreshStatusBadge()
+        void RefreshDebuffBadge()
         {
             var sb = new System.Text.StringBuilder();
-            foreach (var type in StatusRules.All)
+            foreach (var type in DebuffRules.All)
             {
-                var s = _statuses[(int)type];
-                if (!StatusRules.IsActive(type, s)) continue;
-                var c = StatusColor(type);
+                var s = _debuffs[(int)type];
+                if (!DebuffRules.IsActive(type, s)) continue;
+                var c = DebuffColor(type);
                 if (sb.Length > 0) sb.Append(' ');
                 // 이름 + 강도(피해형) / 남은 턴 (독은 강도만)
-                var value = StatusRules.IsDamageOverTime(type) ? s.Amount : s.Turns;
-                sb.Append($"<color=#{ColorUtility.ToHtmlStringRGB(c)}>{StatusRules.Name(type)}{value}</color>");
+                var value = DebuffRules.IsDamageOverTime(type) ? s.Amount : s.Turns;
+                sb.Append($"<color=#{ColorUtility.ToHtmlStringRGB(c)}>{DebuffRules.Name(type)}{value}</color>");
             }
 
             if (_statusBadge == null)
             {
                 if (sb.Length == 0) return;
-                var go = new GameObject("StatusBadge");
+                var go = new GameObject("DebuffBadge");
                 go.transform.SetParent(transform, false);
                 go.transform.localPosition = statusBadgeOffset;
                 _statusBadge = go.AddComponent<TextMeshPro>();

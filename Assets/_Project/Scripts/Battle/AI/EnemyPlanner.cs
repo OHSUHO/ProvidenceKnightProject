@@ -45,7 +45,7 @@ namespace ProvidenceKnight.Battle.AI
         public static EnemyAction ChooseAction(GridMap grid, Unit enemy, Unit target, int order = 1)
         {
             if (target == null || target.IsDead) return EnemyAction.Wait(enemy, order);
-            if (enemy.Has(StatusType.Stun)) return EnemyAction.Stunned(enemy, order);
+            if (enemy.Has(DebuffType.Stun)) return EnemyAction.Stunned(enemy, order);
 
             var cards = UsableCards(enemy).ToList();
 
@@ -82,7 +82,7 @@ namespace ProvidenceKnight.Battle.AI
 
         /// <summary>상태이상(기절·빙결·암흑)에 막히지 않은, 지금 쓸 수 있는 카드.</summary>
         static IEnumerable<CardData> UsableCards(Unit enemy) =>
-            enemy.Data.cards.Where(c => c != null && StatusRules.CanUse(enemy, c));
+            enemy.Data.cards.Where(c => c != null && DebuffRules.CanUse(enemy, c));
 
         /// <summary>
         /// 위험 지역을 "이 몬스터 차례가 됐을 때의 격자" 기준으로 계산한다.

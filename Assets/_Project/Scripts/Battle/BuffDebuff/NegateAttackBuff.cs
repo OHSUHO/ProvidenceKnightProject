@@ -9,7 +9,7 @@ namespace ProvidenceKnight.Battle.Effects
     /// 방어도와 달리 턴이 지나도 사라지지 않는다. maxStacks 를 넘게 쌓이지 않는다 (0 = 제한 없음).
     /// </summary>
     [Serializable]
-    public sealed class NegateAttackEffect : CardEffect
+    public sealed class NegateAttackBuff : CardEffect
     {
         [Min(1)] public int amount = 1;
         [Tooltip("이 횟수까지만 쌓인다. 0 = 제한 없음")]

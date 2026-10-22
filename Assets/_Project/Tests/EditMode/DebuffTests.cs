@@ -10,7 +10,7 @@ using UnityEngine;
 namespace ProvidenceKnight.Tests
 {
     /// <summary>상태이상(출혈·화상·독·기절·빙결·암흑)과 턴 제한이 있는 몬스터 턴 시작 효과.</summary>
-    public class StatusEffectTests
+    public class DebuffTests
     {
         static CardData Card(string name, TargetPattern targeting, params CardEffect[] effects)
         {
@@ -61,16 +61,16 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void Poison_CardAppliesIt_AndTicksThenDecaysAtEnemyTurnStart()
         {
-            var venom = Card("Venom", Adjacent, new ApplyStatusEffect { status = StatusType.Poison, amount = 3 });
+            var venom = Card("Venom", Adjacent, new ApplyDebuff { debuff = DebuffType.Poison, amount = 3 });
             var battle = Make(Melee(), Enumerable.Repeat(venom, 5).ToList());
             var enemy = Enemy(battle);
 
             Assert.IsTrue(battle.TryPlayCard(0, enemy.Position, out _));
-            Assert.AreEqual(3, enemy.GetStatus(StatusType.Poison).Amount);
+            Assert.AreEqual(3, enemy.GetDebuff(DebuffType.Poison).Amount);
 
             battle.EndTurn();
             Assert.AreEqual(7, enemy.Hp);                                  // 3 피해
-            Assert.AreEqual(2, enemy.GetStatus(StatusType.Poison).Amount);  // 그 뒤 1 감소
+            Assert.AreEqual(2, enemy.GetDebuff(DebuffType.Poison).Amount);  // 그 뒤 1 감소
         }
 
         [Test]
@@ -78,15 +78,15 @@ namespace ProvidenceKnight.Tests
         {
             var battle = Make(Melee(hp: 50));
             var enemy = Enemy(battle);
-            BattleRules.ApplyStatus(battle.State, enemy, StatusType.Poison, 2, 0);
-            BattleRules.ApplyStatus(battle.State, enemy, StatusType.Poison, 1, 0);
-            Assert.AreEqual(3, enemy.GetStatus(StatusType.Poison).Amount);
+            BattleRules.ApplyDebuff(battle.State, enemy, DebuffType.Poison, 2, 0);
+            BattleRules.ApplyDebuff(battle.State, enemy, DebuffType.Poison, 1, 0);
+            Assert.AreEqual(3, enemy.GetDebuff(DebuffType.Poison).Amount);
 
             battle.EndTurn();   // 3
             battle.EndTurn();   // 2
             battle.EndTurn();   // 1
             Assert.AreEqual(50 - 6, enemy.Hp);
-            Assert.IsFalse(enemy.Has(StatusType.Poison));
+            Assert.IsFalse(enemy.Has(DebuffType.Poison));
         }
 
         [Test]
@@ -94,13 +94,13 @@ namespace ProvidenceKnight.Tests
         {
             var battle = Make(Melee(hp: 50));
             var enemy = Enemy(battle);
-            BattleRules.ApplyStatus(battle.State, enemy, StatusType.Bleed, 2, 2);
+            BattleRules.ApplyDebuff(battle.State, enemy, DebuffType.Bleed, 2, 2);
 
             battle.EndTurn();
             Assert.AreEqual(48, enemy.Hp);
             battle.EndTurn();
             Assert.AreEqual(46, enemy.Hp);
-            Assert.IsFalse(enemy.Has(StatusType.Bleed));
+            Assert.IsFalse(enemy.Has(DebuffType.Bleed));
             battle.EndTurn();
             Assert.AreEqual(46, enemy.Hp);
         }
@@ -108,34 +108,34 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void Bleed_IgnoresBlock_ButBurnIsAbsorbedByIt()
         {
-            var bleedBattle = Make(Melee(10, 3, new BlockEffect { amount = 4 }));
-            BattleRules.ApplyStatus(bleedBattle.State, Enemy(bleedBattle), StatusType.Bleed, 3, 1);
+            var bleedBattle = Make(Melee(10, 3, new BlockBuff { amount = 4 }));
+            BattleRules.ApplyDebuff(bleedBattle.State, Enemy(bleedBattle), DebuffType.Bleed, 3, 1);
             bleedBattle.EndTurn();
             Assert.AreEqual(7, Enemy(bleedBattle).Hp);
 
-            var burnBattle = Make(Melee(10, 3, new BlockEffect { amount = 4 }));
-            BattleRules.ApplyStatus(burnBattle.State, Enemy(burnBattle), StatusType.Burn, 3, 1);
+            var burnBattle = Make(Melee(10, 3, new BlockBuff { amount = 4 }));
+            BattleRules.ApplyDebuff(burnBattle.State, Enemy(burnBattle), DebuffType.Burn, 3, 1);
             burnBattle.EndTurn();
             Assert.AreEqual(10, Enemy(burnBattle).Hp);
         }
 
         [Test]
-        public void StatusDamage_IgnoresNegate()
+        public void DebuffDamage_IgnoresNegate()
         {
-            var battle = Make(Melee(10, 3, new NegateAttackEffect()));
+            var battle = Make(Melee(10, 3, new NegateAttackBuff()));
             var enemy = Enemy(battle);
-            BattleRules.ApplyStatus(battle.State, enemy, StatusType.Poison, 2, 0);
+            BattleRules.ApplyDebuff(battle.State, enemy, DebuffType.Poison, 2, 0);
             battle.EndTurn();
             Assert.AreEqual(8, enemy.Hp);
             Assert.AreEqual(1, enemy.Negate);
         }
 
         [Test]
-        public void StatusDamage_CanKillTheLastEnemy_BeforeItActs()
+        public void DebuffDamage_CanKillTheLastEnemy_BeforeItActs()
         {
             var battle = Make(Melee(hp: 2, dmg: 5));
             var enemy = Enemy(battle);
-            BattleRules.ApplyStatus(battle.State, enemy, StatusType.Poison, 2, 0);
+            BattleRules.ApplyDebuff(battle.State, enemy, DebuffType.Poison, 2, 0);
             battle.RefreshEnemyPlan();
             Assert.AreEqual(0, battle.State.EnemyPlan.Actions.Count);   // 계획도 이미 쓰러진 것으로 본다
 
@@ -149,7 +149,7 @@ namespace ProvidenceKnight.Tests
         public void PlayerPoison_TicksAtPlayerTurnStart_AndCanDefeat()
         {
             var battle = Make(Melee(dmg: 1), playerHp: 3);
-            BattleRules.ApplyStatus(battle.State, battle.State.Player, StatusType.Poison, 5, 0);
+            BattleRules.ApplyDebuff(battle.State, battle.State.Player, DebuffType.Poison, 5, 0);
             battle.EndTurn();   // 적이 1 → HP 2, 다음 턴 시작에 독 5
 
             Assert.AreEqual(BattlePhase.Defeat, battle.State.Phase);
@@ -158,9 +158,9 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void PlayerBurn_IsAbsorbedByLeftoverBlock()
         {
-            var guard = Card("Guard", new TargetPattern(TargetShape.Self, 1, false), new BlockEffect { amount = 9 });
+            var guard = Card("Guard", new TargetPattern(TargetShape.Self, 1, false), new BlockBuff { amount = 9 });
             var battle = Make(Melee(dmg: 3), Enumerable.Repeat(guard, 5).ToList());
-            BattleRules.ApplyStatus(battle.State, battle.State.Player, StatusType.Burn, 4, 1);
+            BattleRules.ApplyDebuff(battle.State, battle.State.Player, DebuffType.Burn, 4, 1);
             battle.TryPlayCard(0, battle.State.Player.Position, out _);   // 방어 9, 적 공격 3 → 6 남음
             battle.EndTurn();
 
@@ -174,13 +174,13 @@ namespace ProvidenceKnight.Tests
         {
             var battle = Make(Melee());
             var enemy = Enemy(battle);
-            BattleRules.ApplyStatus(battle.State, enemy, StatusType.Stun, 0, 1);
+            BattleRules.ApplyDebuff(battle.State, enemy, DebuffType.Stun, 0, 1);
             battle.RefreshEnemyPlan();
             Assert.AreEqual(IntentType.Stunned, battle.State.EnemyPlan.For(enemy.Id).Type);
 
             battle.EndTurn();
             Assert.AreEqual(20, battle.State.Player.Hp);
-            Assert.IsFalse(enemy.Has(StatusType.Stun));
+            Assert.IsFalse(enemy.Has(DebuffType.Stun));
 
             battle.EndTurn();
             Assert.AreEqual(17, battle.State.Player.Hp);   // 풀리고 나서는 다시 공격
@@ -190,7 +190,7 @@ namespace ProvidenceKnight.Tests
         public void Stun_LastsAsManyEnemyTurnsAsItsDuration()
         {
             var battle = Make(Melee());
-            BattleRules.ApplyStatus(battle.State, Enemy(battle), StatusType.Stun, 0, 2);
+            BattleRules.ApplyDebuff(battle.State, Enemy(battle), DebuffType.Stun, 0, 2);
             battle.EndTurn();
             battle.EndTurn();
             Assert.AreEqual(20, battle.State.Player.Hp);
@@ -202,24 +202,24 @@ namespace ProvidenceKnight.Tests
         public void StunnedPlayer_CannotPlayCards_ForExactlyOneTurn()
         {
             var stunner = Card("Shock", Adjacent, new DamageEffect { amount = 1 },
-                new ApplyStatusEffect { status = StatusType.Stun, turns = 1 });
+                new ApplyDebuff { debuff = DebuffType.Stun, turns = 1 });
             var battle = Make(Def(Team.Enemy, 10, new List<CardData> { stunner }));
 
             battle.EndTurn();   // 적이 플레이어를 기절시킴
             var player = battle.State.Player;
-            Assert.IsTrue(player.Has(StatusType.Stun));
+            Assert.IsTrue(player.Has(DebuffType.Stun));
             Assert.IsFalse(battle.CanSelectCard(0, out var reason));
             StringAssert.Contains("기절", reason);
 
             battle.EndTurn();   // 기절한 턴을 넘김 (그 사이 또 기절당함)
-            Assert.IsTrue(player.Has(StatusType.Stun));
+            Assert.IsTrue(player.Has(DebuffType.Stun));
         }
 
         [Test]
         public void PlayerStun_ExpiresAtEndOfThatTurn()
         {
             var battle = Make(Melee(dmg: 1));
-            BattleRules.ApplyStatus(battle.State, battle.State.Player, StatusType.Stun, 0, 1);
+            BattleRules.ApplyDebuff(battle.State, battle.State.Player, DebuffType.Stun, 0, 1);
             Assert.IsFalse(battle.CanSelectCard(0, out _));
             battle.EndTurn();
             Assert.IsTrue(battle.CanSelectCard(0, out _));
@@ -232,7 +232,7 @@ namespace ProvidenceKnight.Tests
         {
             var battle = Make(Def(Team.Enemy, 10, TestUnits.Cards(2, 3)), enemyX: 4);
             var enemy = Enemy(battle);
-            BattleRules.ApplyStatus(battle.State, enemy, StatusType.Freeze, 0, 1);
+            BattleRules.ApplyDebuff(battle.State, enemy, DebuffType.Freeze, 0, 1);
             battle.RefreshEnemyPlan();
 
             battle.EndTurn();
@@ -246,7 +246,7 @@ namespace ProvidenceKnight.Tests
         public void FrozenEnemy_AttackCardsStillWork()
         {
             var battle = Make(Melee());
-            BattleRules.ApplyStatus(battle.State, Enemy(battle), StatusType.Freeze, 0, 2);
+            BattleRules.ApplyDebuff(battle.State, Enemy(battle), DebuffType.Freeze, 0, 2);
             battle.EndTurn();
             Assert.AreEqual(17, battle.State.Player.Hp);
         }
@@ -260,7 +260,7 @@ namespace ProvidenceKnight.Tests
                 Slash(), Slash(), Slash(), Slash()
             };
             var battle = Make(Melee(), deck);
-            BattleRules.ApplyStatus(battle.State, battle.State.Player, StatusType.Freeze, 0, 1);
+            BattleRules.ApplyDebuff(battle.State, battle.State.Player, DebuffType.Freeze, 0, 1);
 
             Assert.IsFalse(battle.CanSelectCard(0, out var reason));
             StringAssert.Contains("빙결", reason);
@@ -279,7 +279,7 @@ namespace ProvidenceKnight.Tests
             clear.EndTurn();
             Assert.AreEqual(17, clear.State.Player.Hp);
 
-            BattleRules.ApplyStatus(battle.State, Enemy(battle), StatusType.Darkness, 0, 1);
+            BattleRules.ApplyDebuff(battle.State, Enemy(battle), DebuffType.Darkness, 0, 1);
             battle.EndTurn();
             Assert.AreEqual(20, battle.State.Player.Hp);
         }
@@ -294,43 +294,43 @@ namespace ProvidenceKnight.Tests
             var diamond2 = Card("Burst", new TargetPattern(TargetShape.Diamond, 2, true), new DamageEffect());
 
             var battle = Make(Melee());
-            BattleRules.ApplyStatus(battle.State, battle.State.Player, StatusType.Darkness, 0, 1);
+            BattleRules.ApplyDebuff(battle.State, battle.State.Player, DebuffType.Darkness, 0, 1);
             var p = battle.State.Player;
 
-            Assert.IsTrue(StatusRules.CanUse(p, adjacent));
-            Assert.IsTrue(StatusRules.CanUse(p, walk));
-            Assert.IsTrue(StatusRules.CanUse(p, line1));
-            Assert.IsFalse(StatusRules.CanUse(p, line2));
-            Assert.IsFalse(StatusRules.CanUse(p, diamond2));
+            Assert.IsTrue(DebuffRules.CanUse(p, adjacent));
+            Assert.IsTrue(DebuffRules.CanUse(p, walk));
+            Assert.IsTrue(DebuffRules.CanUse(p, line1));
+            Assert.IsFalse(DebuffRules.CanUse(p, line2));
+            Assert.IsFalse(DebuffRules.CanUse(p, diamond2));
         }
 
         // ---------------- 기타 ----------------
 
         [Test]
-        public void Status_DoesNotApplyToAllies_AndSelfFlagTargetsCaster()
+        public void Debuff_DoesNotApplyToAllies_AndSelfFlagTargetsCaster()
         {
             var battle = Make(Melee());
             var enemy = Enemy(battle);
             var ctx = new EffectContext(battle.State, battle.State.Player, battle.State.Player.Position, null);
-            new ApplyStatusEffect { status = StatusType.Stun, turns = 1 }.Resolve(ctx);   // 자기 칸 = 적대 유닛 아님
-            Assert.IsFalse(battle.State.Player.Has(StatusType.Stun));
+            new ApplyDebuff { debuff = DebuffType.Stun, turns = 1 }.Resolve(ctx);   // 자기 칸 = 적대 유닛 아님
+            Assert.IsFalse(battle.State.Player.Has(DebuffType.Stun));
 
-            new ApplyStatusEffect { status = StatusType.Stun, turns = 1, onSelf = true }.Resolve(ctx);
-            Assert.IsTrue(battle.State.Player.Has(StatusType.Stun));
-            Assert.IsFalse(enemy.Has(StatusType.Stun));
+            new ApplyDebuff { debuff = DebuffType.Stun, turns = 1, onSelf = true }.Resolve(ctx);
+            Assert.IsTrue(battle.State.Player.Has(DebuffType.Stun));
+            Assert.IsFalse(enemy.Has(DebuffType.Stun));
         }
 
         [Test]
-        public void SimulationCopies_CarryStatuses_SoPreviewMatchesReality()
+        public void SimulationCopies_CarryDebuffs_SoPreviewMatchesReality()
         {
-            var stunner = Card("Shock", Adjacent, new ApplyStatusEffect { status = StatusType.Stun, turns = 1 });
+            var stunner = Card("Shock", Adjacent, new ApplyDebuff { debuff = DebuffType.Stun, turns = 1 });
             var battle = Make(Melee(), Enumerable.Repeat(stunner, 5).ToList());
             var enemy = Enemy(battle);
 
             var preview = battle.PreviewCard(0, enemy.Position);
 
             Assert.AreEqual(IntentType.Stunned, preview.Plan.For(enemy.Id).Type);
-            Assert.IsFalse(enemy.Has(StatusType.Stun));   // 실제 상태는 그대로
+            Assert.IsFalse(enemy.Has(DebuffType.Stun));   // 실제 상태는 그대로
 
             battle.TryPlayCard(0, enemy.Position, out _);
             battle.EndTurn();
@@ -338,13 +338,13 @@ namespace ProvidenceKnight.Tests
         }
 
         [Test]
-        public void StatusChanged_EventsAreEmitted()
+        public void DebuffChanged_EventsAreEmitted()
         {
             var battle = Make(Melee(hp: 50));
-            BattleRules.ApplyStatus(battle.State, Enemy(battle), StatusType.Bleed, 2, 2);
+            BattleRules.ApplyDebuff(battle.State, Enemy(battle), DebuffType.Bleed, 2, 2);
             battle.EndTurn();
 
-            var events = battle.Events.History.OfType<StatusChanged>().ToList();
+            var events = battle.Events.History.OfType<DebuffChanged>().ToList();
             Assert.IsTrue(events.First().Applied);
             Assert.AreEqual(1, events.Last().Turns);
             Assert.IsFalse(events.Last().Applied);
@@ -355,7 +355,7 @@ namespace ProvidenceKnight.Tests
         static UnitData LimitedBlock(int turns)
         {
             var d = Def(Team.Enemy, 10, TestUnits.Cards(0, 3));
-            d.turnStartEffects = new List<TurnStartEntry> { new(new BlockEffect { amount = 4 }, turns) };
+            d.turnStartEffects = new List<TurnStartEntry> { new(new BlockBuff { amount = 4 }, turns) };
             return d;
         }
 
@@ -389,8 +389,8 @@ namespace ProvidenceKnight.Tests
             var d = Def(Team.Enemy, 10, TestUnits.Cards(0, 3));
             d.turnStartEffects = new List<TurnStartEntry>
             {
-                new(new BlockEffect { amount = 4 }, 1),
-                new(new NegateAttackEffect { maxStacks = 0 }, 0),
+                new(new BlockBuff { amount = 4 }, 1),
+                new(new NegateAttackBuff { maxStacks = 0 }, 0),
             };
             var battle = Make(d);
             var enemy = Enemy(battle);
@@ -402,15 +402,15 @@ namespace ProvidenceKnight.Tests
         }
 
         [Test]
-        public void TurnStartEffect_CanApplyStatusToSelf_ForLimitedTurns()
+        public void TurnStartEffect_CanApplyDebuffToSelf_ForLimitedTurns()
         {
             var d = Def(Team.Enemy, 10, TestUnits.Cards(0, 3));
             d.turnStartEffects = new List<TurnStartEntry>
             {
-                new(new ApplyStatusEffect { status = StatusType.Stun, turns = 1, onSelf = true }, 1)
+                new(new ApplyDebuff { debuff = DebuffType.Stun, turns = 1, onSelf = true }, 1)
             };
             var battle = Make(d);
-            Assert.IsTrue(Enemy(battle).Has(StatusType.Stun));   // 첫 턴은 스스로 기절 (느리게 깨어나는 몬스터)
+            Assert.IsTrue(Enemy(battle).Has(DebuffType.Stun));   // 첫 턴은 스스로 기절 (느리게 깨어나는 몬스터)
 
             battle.EndTurn();
             Assert.AreEqual(20, battle.State.Player.Hp);
@@ -419,10 +419,10 @@ namespace ProvidenceKnight.Tests
         }
 
         [Test]
-        public void Validator_AcceptsSelfStatus_RejectsHostileStatusAsTurnStartEffect()
+        public void Validator_AcceptsSelfDebuff_RejectsHostileDebuffAsTurnStartEffect()
         {
-            var ok = Def(Team.Enemy, 10, TestUnits.Cards(0, 3), new ApplyStatusEffect { onSelf = true });
-            var bad = Def(Team.Enemy, 10, TestUnits.Cards(0, 3), new ApplyStatusEffect { onSelf = false });
+            var ok = Def(Team.Enemy, 10, TestUnits.Cards(0, 3), new ApplyDebuff { onSelf = true });
+            var bad = Def(Team.Enemy, 10, TestUnits.Cards(0, 3), new ApplyDebuff { onSelf = false });
             var db = ScriptableObject.CreateInstance<GameDatabase>();
 
             db.units = new List<UnitData> { ok };

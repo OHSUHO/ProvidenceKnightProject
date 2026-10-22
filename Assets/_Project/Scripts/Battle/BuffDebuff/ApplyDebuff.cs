@@ -10,9 +10,9 @@ namespace ProvidenceKnight.Battle.Effects
     /// 공격 무효화는 피해만 막는다 — 같은 카드의 상태이상은 그대로 걸린다.
     /// </summary>
     [Serializable]
-    public sealed class ApplyStatusEffect : CardEffect
+    public sealed class ApplyDebuff : CardEffect
     {
-        public StatusType status = StatusType.Poison;
+        public DebuffType debuff = DebuffType.Poison;
         [Tooltip("피해형(출혈·화상·독)의 턴당 피해량. 기절·빙결·암흑에서는 쓰지 않음")]
         [Min(0)] public int amount = 2;
         [Tooltip("지속 턴 (그 유닛의 턴 기준). 독은 강도가 줄다 0이 되면 끝나므로 쓰지 않음")]
@@ -27,12 +27,12 @@ namespace ProvidenceKnight.Battle.Effects
         {
             var target = onSelf ? ctx.Caster : ctx.State.Grid.GetUnit(ctx.Target);
             if (!onSelf && !Targeting.IsEnemyOf(target, ctx.Caster)) return;
-            BattleRules.ApplyStatus(ctx.State, target, status, amount, turns);
+            BattleRules.ApplyDebuff(ctx.State, target, debuff, amount, turns);
         }
 
         public override string Describe(CardData card)
         {
-            var text = StatusRules.Describe(status, amount, turns);
+            var text = DebuffRules.Describe(debuff, amount, turns);
             return onSelf || card == null ? $"자신에게 {text}" : $"{text} 부여";
         }
     }

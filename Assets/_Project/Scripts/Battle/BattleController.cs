@@ -142,7 +142,7 @@ namespace ProvidenceKnight.Battle
             if (handIndex < 0 || handIndex >= State.Cards.Hand.Count) { reason = "잘못된 카드"; return false; }
 
             var card = State.Cards.Hand[handIndex];
-            if (!StatusRules.CanUse(State.Player, card, out reason)) return false;
+            if (!DebuffRules.CanUse(State.Player, card, out reason)) return false;
             if (card.cost > State.Energy) { reason = "에너지 부족"; return false; }
             if (GetValidTargets(handIndex).Count == 0) { reason = "대상 없음"; return false; }
             return true;

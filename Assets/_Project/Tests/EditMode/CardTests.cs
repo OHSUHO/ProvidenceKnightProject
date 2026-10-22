@@ -22,7 +22,7 @@ namespace ProvidenceKnight.Tests
 
         static CardData Move(int range = 2) => Card("Move", 1, TargetShape.Walk, range, false, new MoveEffect());
         static CardData Slash(int dmg = 6) => Card("Slash", 1, TargetShape.Adjacent, 1, true, new DamageEffect { amount = dmg });
-        static CardData Guard(int block = 5) => Card("Guard", 1, TargetShape.Self, 1, false, new BlockEffect { amount = block });
+        static CardData Guard(int block = 5) => Card("Guard", 1, TargetShape.Self, 1, false, new BlockBuff { amount = block });
         static CardData Named(string n) => Card(n, 1, TargetShape.Self, 1, false);
 
         static UnitData UnitDef(Team team, int hp)
@@ -198,7 +198,7 @@ namespace ProvidenceKnight.Tests
         public void ComboCard_RunsEffectsInOrder()
         {
             // 방패치기: 인접 적 피해 5 → 방어도 5
-            var bash = Card("Bash", 2, TargetShape.Adjacent, 1, true, new DamageEffect { amount = 5 }, new BlockEffect { amount = 5 });
+            var bash = Card("Bash", 2, TargetShape.Adjacent, 1, true, new DamageEffect { amount = 5 }, new BlockBuff { amount = 5 });
             var battle = MakeBattle(new[] { bash });
             var enemy = battle.State.Enemies.Single();
             int from = battle.Events.History.Count;
@@ -214,7 +214,7 @@ namespace ProvidenceKnight.Tests
         [Test]
         public void Description_IsGeneratedFromEffects()
         {
-            var bash = Card("Bash", 2, TargetShape.Adjacent, 1, true, new DamageEffect { amount = 5 }, new BlockEffect { amount = 5 });
+            var bash = Card("Bash", 2, TargetShape.Adjacent, 1, true, new DamageEffect { amount = 5 }, new BlockBuff { amount = 5 });
             Assert.AreEqual("인접 피해 5\n방어도 5", bash.GetDescription());
             Assert.AreEqual("2칸 이동", Move(2).GetDescription());
         }

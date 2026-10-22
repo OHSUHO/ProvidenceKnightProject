@@ -15,7 +15,7 @@ namespace ProvidenceKnight.Tests
             var c = ScriptableObject.CreateInstance<CardData>();
             c.name = c.cardName = id;
             c.EditorSetId(id);
-            c.effects = new List<CardEffect> { new BlockEffect { amount = 1 } };
+            c.effects = new List<CardEffect> { new BlockBuff { amount = 1 } };
             return c;
         }
 

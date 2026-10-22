@@ -196,7 +196,7 @@ namespace ProvidenceKnight.Tests
             guard.cardName = "Guard";
             guard.cost = 0;
             guard.targeting = new TargetPattern(TargetShape.Self, 0, false);
-            guard.effects = new List<CardEffect> { new BlockEffect { amount = cardBlock } };
+            guard.effects = new List<CardEffect> { new BlockBuff { amount = cardBlock } };
 
             var b = BattleController.Create(stage, new List<CardData> { card, guard }, 2, 3);
             b.SpawnFromStage(stage, playerDef, null, bonus);

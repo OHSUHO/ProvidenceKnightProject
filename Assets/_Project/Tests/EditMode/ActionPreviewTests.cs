@@ -25,7 +25,7 @@ namespace ProvidenceKnight.Tests
 
         static CardData Move(int range) => Card("Move", TargetShape.Walk, range, false, new MoveEffect());
         static CardData Slash(int dmg) => Card("Slash", TargetShape.Adjacent, 1, true, new DamageEffect { amount = dmg });
-        static CardData Guard(int block) => Card("Guard", TargetShape.Self, 1, false, new BlockEffect { amount = block });
+        static CardData Guard(int block) => Card("Guard", TargetShape.Self, 1, false, new BlockBuff { amount = block });
 
         static UnitData UnitDef(Team team, int hp, int moveRange = 0, int attackDamage = 0)
         {

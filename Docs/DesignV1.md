@@ -103,7 +103,8 @@ Scripts/
     GridMap, Unit(+ActionOrderKey), Targeting, CardCycle
     BattleState(+BattlePhase), BattleController, BattleRules, BattleEvents(이벤트 레코드·싱크)
   Battle/AI/         ProvidenceKnight.Battle.AI       EnemyPlanner, EnemyActionResolver, EnemyTurnPlan, EnemyAction
-  Battle/Effects/    ProvidenceKnight.Battle.Effects  CardEffect(추상)+EffectContext, MoveEffect, DamageEffect, BlockEffect, GainMaxEnergyEffect
+  Battle/Effects/    ProvidenceKnight.Battle.Effects  CardEffect(추상)+EffectContext, MoveEffect, DamageEffect
+  Battle/BuffDebuff/ (네임스페이스는 Battle / Battle.Effects 유지)  Debuff(DebuffType·DebuffState·DebuffRules), ApplyDebuff, BlockBuff, NegateAttackBuff, GainMaxEnergyBuff
   Run/               ProvidenceKnight.Run             RunState(+시드), RewardPicker(System.Random 주입), RunSaveData(+RunSaveStore)
   Data/              ProvidenceKnight.Data            GameDataAsset(id), CardData, UnitData, StageData, DeckData, RewardPoolData, RunConfig, GameDatabase, DataValidator, TargetPattern(+TargetShape)
   View/, Input/      (§3)
@@ -337,7 +338,7 @@ EventSystem                    (InputSystemUIInputModule)
 
 ## 상태이상과 턴 제한 턴 시작 효과 (feature/cardSpecialEffect)
 
-**상태이상** (`Battle/Status.cs`, `ApplyStatusEffect`, `Unit.GetStatus`). 지속 시간은 "그 유닛의 턴" 단위.
+**상태이상** (`Battle/BuffDebuff/Debuff.cs`, `ApplyDebuff`, `Unit.GetDebuff`). 지속 시간은 "그 유닛의 턴" 단위.
 
 | 상태 | 효과 | 지속 |
 |---|---|---|
@@ -351,7 +352,7 @@ EventSystem                    (InputSystemUIInputModule)
 - 피해는 공격 무효화를 무시한다. 같은 카드의 피해가 무효화돼도 상태이상은 걸린다.
 - 플레이어: 턴 시작에 피해(방어도 초기화 **전**), 턴 종료에 기절/빙결/암흑 1 감소.
 - 몬스터: 적 턴이 시작될 때 전원 피해(`BattleRules.RunEnemyTurnStart`, 계획 시뮬레이션도 똑같이 먼저 실행 → 이 피해로 쓰러지면 계획에서 빠짐), 행동이 끝나면 제어 상태 1 감소.
-- 사용 가능 여부는 `StatusRules.CanUse` 한 곳 (플레이어 `CanSelectCard`, 몬스터 `EnemyPlanner` 공용).
-- `ApplyStatusEffect`: 기본은 대상 칸의 적에게(= Attack 종류), `onSelf` 면 시전자에게(턴 시작 효과에 사용 가능).
+- 사용 가능 여부는 `DebuffRules.CanUse` 한 곳 (플레이어 `CanSelectCard`, 몬스터 `EnemyPlanner` 공용).
+- `ApplyDebuff`: 기본은 대상 칸의 적에게(= Attack 종류), `onSelf` 면 시전자에게(턴 시작 효과에 사용 가능).
 
 **턴 시작 효과 턴 제한** (`UnitData.turnStartEffects` = `TurnStartEntry` 목록): 효과마다 `turns` (0 = 전투 내내, N = 전투 N턴째까지). `BattleState.Turn` 기준.

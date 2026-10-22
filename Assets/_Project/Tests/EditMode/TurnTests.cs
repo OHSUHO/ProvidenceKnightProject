@@ -198,7 +198,7 @@ namespace ProvidenceKnight.Tests
             var enemyDef = UnitDef(Team.Enemy, 1);
             var card = ScriptableObject.CreateInstance<CardData>();
             card.cardName = "Guard"; card.cost = 1; card.targeting = new TargetPattern(TargetShape.Self, 1, false);
-            card.effects = new List<CardEffect> { new BlockEffect { amount = 5 } };
+            card.effects = new List<CardEffect> { new BlockBuff { amount = 5 } };
             var stage = Stage(3, 1, new Vector2Int(0, 0), (enemyDef, new Vector2Int(1, 0)));
             var battle = BattleController.Create(stage, new List<CardData> { card, card, card, card, card }, 5, 3);
             battle.SpawnFromStage(stage, UnitDef(Team.Player, 20));
@@ -237,7 +237,7 @@ namespace ProvidenceKnight.Tests
         {
             var card = ScriptableObject.CreateInstance<CardData>();
             card.targeting = new TargetPattern(TargetShape.Self, 1, false);
-            card.effects = new List<CardEffect> { new BlockEffect { amount = 1 } };
+            card.effects = new List<CardEffect> { new BlockBuff { amount = 1 } };
             var stage = Stage(3, 1, new Vector2Int(0, 0), (UnitDef(Team.Enemy, 5), new Vector2Int(2, 0)));
             var battle = BattleController.Create(stage, new List<CardData> { card }, 5, 3);
             battle.SpawnFromStage(stage, UnitDef(Team.Player, 20));   // 아직 StartPlayerTurn 전

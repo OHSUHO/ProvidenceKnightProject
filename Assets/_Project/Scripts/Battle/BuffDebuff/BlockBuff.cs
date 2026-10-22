@@ -6,7 +6,7 @@ namespace ProvidenceKnight.Battle.Effects
 {
     /// <summary>시전자에게 방어도 (다음 내 턴 시작 시 초기화).</summary>
     [Serializable]
-    public sealed class BlockEffect : CardEffect
+    public sealed class BlockBuff : CardEffect
     {
         [Min(0)] public int amount = 5;
 
